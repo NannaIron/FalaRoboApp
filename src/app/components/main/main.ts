@@ -1,7 +1,7 @@
 import { Component, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { Router } from '@angular/router';
-import { LoginService, User } from '../services/login.service';
+import { LoginService, User } from '../../../services/login.service';
 
 @Component({
   selector: 'app-main',
@@ -20,7 +20,6 @@ export class MainComponent implements OnInit {
   ) {}
 
   ngOnInit(): void {
-    // Get current user and token information
     this.currentUser = this.loginService.getCurrentUser();
     this.authToken = this.loginService.getAuthToken();
 
@@ -32,10 +31,8 @@ export class MainComponent implements OnInit {
   logout(): void {
     console.log('Logging out user');
     
-    // Clear authentication data
     this.loginService.logout();
     
-    // Navigate back to login page
     this.router.navigate(['/login']);
   }
 }
