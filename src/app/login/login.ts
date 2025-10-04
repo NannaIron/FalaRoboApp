@@ -1,6 +1,7 @@
 import { Component, OnInit } from '@angular/core';
 import { FormBuilder, FormGroup, Validators, ReactiveFormsModule } from '@angular/forms';
 import { CommonModule } from '@angular/common';
+import { Router } from '@angular/router';
 import { LoginService, LoginRequest } from '../services/login.service';
 
 @Component({
@@ -14,28 +15,25 @@ export class LoginComponent implements OnInit {
   loginForm!: FormGroup;
   isLoading = false;
   errorMessage: string = '';
-  successMessage: string = '';
 
   constructor(
     private formBuilder: FormBuilder,
-    private loginService: LoginService
+    private loginService: LoginService,
+    private router: Router
   ) {}
 
   ngOnInit(): void {
     this.loginForm = this.formBuilder.group({
       email: ['', [Validators.required, Validators.email]],
-      password: ['', [Validators.required, Validators.minLength(3)]], // Changed to 3 for mock "123"
+      password: ['', [Validators.required, Validators.minLength(3)]],
       rememberMe: [false]
     });
 
-    // Check if user is already logged in
     if (this.loginService.isLoggedIn()) {
-      const user = this.loginService.getCurrentUser();
-      this.successMessage = `Bem-vindo de volta, ${user?.username}!`;
+      this.router.navigate(['/main']);
     }
   }
 
-  // Getters for easy access to form controls
   get email() {
     return this.loginForm.get('email')!;
   }
@@ -50,9 +48,7 @@ export class LoginComponent implements OnInit {
 
   onSubmit(): void {
     if (this.loginForm.valid) {
-      // Clear previous messages
       this.errorMessage = '';
-      this.successMessage = '';
       this.isLoading = true;
 
       const loginRequest: LoginRequest = {
@@ -68,14 +64,10 @@ export class LoginComponent implements OnInit {
           this.isLoading = false;
           
           if (response.success) {
-            this.successMessage = response.message || 'Login realizado com sucesso!';
             console.log('Login successful:', response);
+            console.log('Token received:', response.token);
             
-            // Here you would typically navigate to dashboard or main app
-            // For now, we'll just show the success message
-            setTimeout(() => {
-              this.successMessage = `Bem-vindo, ${response.user?.username}! Login realizado com sucesso.`;
-            }, 100);
+            this.router.navigate(['/main']);
           } else {
             this.errorMessage = response.message || 'Erro no login!';
           }
@@ -87,15 +79,12 @@ export class LoginComponent implements OnInit {
         }
       });
     } else {
-      // Mark all fields as touched to show validation errors
       this.loginForm.markAllAsTouched();
     }
   }
 
-  // Method to logout (for testing purposes)
   logout(): void {
     this.loginService.logout();
-    this.successMessage = '';
     this.errorMessage = '';
     this.loginForm.reset();
     console.log('User logged out');

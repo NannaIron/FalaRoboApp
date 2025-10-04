@@ -8,5 +8,4 @@ import { RouterOutlet } from '@angular/router';
   styleUrl: './app.scss'
 })
 export class App {
-  // Main app component for FalaRobo login system
 }

@@ -1,7 +1,7 @@
 {
   "name": "FalaRobo App",
   "short_name": "FalaRobo",
-  "description": "FalaRobo - Sistema de Login",
+  "description": "FalaRobo - Digital Twin",
   "icons": [
     {
       "src": "/android-chrome-192x192.png",

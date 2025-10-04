@@ -1,0 +1,16 @@
+<div class="main-container">
+  <div class="main-header">
+    <h1 class="main-title">FalaRobo - Digital Twin</h1>
+    <div class="user-info">
+      <span class="welcome-text">Bem-vindo(a), {{ currentUser?.username }}!</span>
+      <button 
+        type="button" 
+        class="btn btn-outline-danger btn-sm ms-3"
+        (click)="logout()"
+      >
+        <i class="fas fa-sign-out-alt me-1"></i>
+        Log Out
+      </button>
+    </div>
+  </div>
+</div>
