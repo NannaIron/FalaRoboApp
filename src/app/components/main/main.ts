@@ -13,6 +13,7 @@ import { LoginService, User } from '../../../services/login.service';
 export class MainComponent implements OnInit {
   currentUser: User | null = null;
   authToken: string | null = null;
+  isMenuOpen = false;
 
   constructor(
     private loginService: LoginService,
@@ -22,17 +23,14 @@ export class MainComponent implements OnInit {
   ngOnInit(): void {
     this.currentUser = this.loginService.getCurrentUser();
     this.authToken = this.loginService.getAuthToken();
-
-    console.log('Main component loaded');
-    console.log('Current user:', this.currentUser);
-    console.log('Auth token:', this.authToken);
   }
 
-  logout(): void {
-    console.log('Logging out user');
-    
+  logout(): void {    
     this.loginService.logout();
-    
     this.router.navigate(['/login']);
+  }
+
+  toggleMenu(): void {
+    this.isMenuOpen = !this.isMenuOpen;
   }
 }

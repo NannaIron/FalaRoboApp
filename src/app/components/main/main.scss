@@ -14,11 +14,42 @@
   align-items: center;
   flex-wrap: wrap;
   gap: 12px;
+  position: relative;
+}
+
+.menu-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 36px;
+  height: 36px;
+  padding: 6px;
+  border: none;
+  background: transparent;
+  cursor: pointer;
+  flex: 0 0 auto;
+  margin-right: 10px;
+  border-radius: 6px;
+}
+
+.menu-btn:focus {
+  outline: none;
+}
+
+.menu-btn:hover {
+  background: rgba(0, 0, 0, 0.04);
+}
+
+.menu-btn .menu-icon {
+  width: 24px;
+  height: 24px;
+  object-fit: contain;
+  display: block;
 }
 
 .main-logo {
   width: auto;
-  height: 44px; 
+  height: 44px;
   max-height: 56px;
   object-fit: contain;
   display: inline-block;
@@ -36,12 +67,12 @@
   margin-left: auto;
   display: flex;
   align-items: center;
+}
 
-  .welcome-text {
-    font-weight: 500;
-    color: #666;
-    font-size: 1rem;
-  }
+.user-info .welcome-text {
+  font-weight: 500;
+  color: #666;
+  font-size: 1rem;
 }
 
 @media (max-width: 992px) {
@@ -59,11 +90,21 @@
     flex-direction: column;
     text-align: center;
     gap: 15px;
+    align-items: center;
+  }
+
+  .menu-btn {
+    position: absolute;
+    left: 16px;
+    top: 50%;
+    transform: translateY(-50%);
+    margin-right: 0;
   }
 
   .main-logo {
     height: 40px;
     margin-bottom: 4px;
+    margin-left: 40px;
   }
 
   .main-title {
@@ -77,6 +118,17 @@
 }
 
 @media (min-width: 1200px) {
+  .menu-btn {
+    width: 40px;
+    height: 40px;
+    margin-right: 12px;
+  }
+
+  .menu-btn .menu-icon {
+    width: 28px;
+    height: 28px;
+  }
+
   .main-logo {
     height: 56px;
   }
