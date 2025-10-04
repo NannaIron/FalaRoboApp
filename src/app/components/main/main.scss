@@ -11,9 +11,17 @@
   padding: 20px 30px;
   margin-bottom: 30px;
   display: flex;
-  justify-content: space-between;
   align-items: center;
   flex-wrap: wrap;
+  gap: 12px;
+}
+
+.main-logo {
+  width: auto;
+  height: 44px; 
+  max-height: 56px;
+  object-fit: contain;
+  display: inline-block;
 }
 
 .main-title {
@@ -21,16 +29,28 @@
   font-weight: 600;
   color: #333;
   margin: 0;
+  display: inline-block;
 }
 
 .user-info {
+  margin-left: auto;
   display: flex;
   align-items: center;
-  
+
   .welcome-text {
     font-weight: 500;
     color: #666;
     font-size: 1rem;
+  }
+}
+
+@media (max-width: 992px) {
+  .main-logo {
+    height: 40px;
+  }
+
+  .main-title {
+    font-size: 1.6rem;
   }
 }
 
@@ -39,17 +59,33 @@
     flex-direction: column;
     text-align: center;
     gap: 15px;
-    
-    .user-info {
-      justify-content: center;
-    }
   }
-  
-  .main-container {
-    padding: 15px;
+
+  .main-logo {
+    height: 40px;
+    margin-bottom: 4px;
   }
-  
+
   .main-title {
     font-size: 1.5rem;
+  }
+
+  .user-info {
+    margin-left: 0;
+    justify-content: center;
+  }
+}
+
+@media (min-width: 1200px) {
+  .main-logo {
+    height: 56px;
+  }
+
+  .main-header {
+    padding: 20px 30px;
+  }
+
+  .main-title {
+    font-size: 1.9rem;
   }
 }

@@ -1,6 +1,7 @@
 <div class="login-container">
   <div class="login-card">
     <div class="login-header">
+      <img src="/assets/images/solitudeLogo.svg" alt="Solitude Logo" class="login-logo" loading="lazy" />
       <h1 class="login-title">FalaRobo</h1>
       <p class="login-subtitle">Insira suas credenciais para entrar.</p>
     </div>
@@ -17,7 +18,7 @@
           class="form-control" 
           id="email" 
           formControlName="email"
-          placeholder="Email address"
+          placeholder="Email"
           [class.is-invalid]="email.invalid && email.touched"
           [disabled]="isLoading"
         >
@@ -34,7 +35,7 @@
           class="form-control" 
           id="password" 
           formControlName="password"
-          placeholder="Password"
+          placeholder="Senha"
           [class.is-invalid]="password.invalid && password.touched"
           [disabled]="isLoading"
         >
