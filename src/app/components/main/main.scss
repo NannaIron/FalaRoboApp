@@ -141,3 +141,47 @@
     font-size: 1.9rem;
   }
 }
+
+.icon-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 36px;
+  height: 36px;
+  padding: 6px;
+  border: none;
+  background: transparent;
+  cursor: pointer;
+  flex: 0 0 auto;
+  border-radius: 6px;
+}
+
+.icon-btn:focus {
+  outline: none;
+}
+
+.icon-btn:hover {
+  background: rgba(0, 0, 0, 0.04);
+}
+
+.icon-img,
+.menu-icon {
+  width: 24px;
+  height: 24px;
+  object-fit: contain;
+  display: block;
+}
+
+@media (min-width: 1200px) {
+  .icon-btn {
+    width: 40px;
+    height: 40px;
+    margin-right: 12px;
+  }
+
+  .icon-img,
+  .menu-icon {
+    width: 28px;
+    height: 28px;
+  }
+}
