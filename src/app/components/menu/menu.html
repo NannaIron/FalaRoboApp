@@ -5,21 +5,42 @@
     </div>
 
     <ul class="menu-list">
-      <li class="menu-item menu-item--parent">
-        <a href="#" class="menu-link" (click)="onSelect('motor-1'); $event.preventDefault()">
+      <li class="menu-item menu-item--parent" [class.expanded]="isExpanded('motor-1')">
+        <button
+          type="button"
+          class="menu-link menu-link--parent"
+          (click)="toggleExpand('motor-1'); $event.stopPropagation()"
+          [attr.aria-expanded]="isExpanded('motor-1')"
+          aria-controls="motor-1-sublist"
+        >
           <img src="/assets/images/arrow-right-outline.svg" alt="" class="menu-icon" />
           <span class="menu-text">Motor 1</span>
-        </a>
+        </button>
 
-        <ul class="menu-sublist" role="group" aria-label="Motor 1 detalhes">
+        <ul
+          id="motor-1-sublist"
+          class="menu-sublist"
+          role="group"
+          aria-label="Motor 1 detalhes"
+          *ngIf="isExpanded('motor-1')"
+        >
+
           <li class="menu-item">
-            <a href="#" class="menu-link menu-link--child" (click)="onSelect('pistao-grande'); $event.preventDefault()">
+            <a href="#" class="menu-link menu-link--child" (click)="onSelect('completo'); $event.preventDefault(); $event.stopPropagation()">
+              <span class="menu-bullet">-</span>
+              <span class="menu-text">Completo</span>
+            </a>
+          </li>
+
+          <li class="menu-item">
+            <a href="#" class="menu-link menu-link--child" (click)="onSelect('pistao-grande'); $event.preventDefault(); $event.stopPropagation()">
               <span class="menu-bullet">-</span>
               <span class="menu-text">Pistão Grande</span>
             </a>
           </li>
+
           <li class="menu-item">
-            <a href="#" class="menu-link menu-link--child" (click)="onSelect('pistao-pequeno'); $event.preventDefault()">
+            <a href="#" class="menu-link menu-link--child" (click)="onSelect('pistao-pequeno'); $event.preventDefault(); $event.stopPropagation()">
               <span class="menu-bullet">-</span>
               <span class="menu-text">Pistão Pequeno</span>
             </a>

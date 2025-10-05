@@ -13,6 +13,10 @@ export class MenuComponent {
   @Output() closeMenu = new EventEmitter<void>();
   @Output() select = new EventEmitter<string>();
 
+  private expandedMap: Record<string, boolean> = {
+    'motor-1': false
+  };
+
   onBackdropClick(): void {
     this.closeMenu.emit();
   }
@@ -23,5 +27,13 @@ export class MenuComponent {
 
   onSelect(id: string): void {
     this.select.emit(id);
+  }
+
+  toggleExpand(id: string): void {
+    this.expandedMap[id] = !this.expandedMap[id];
+  }
+
+  isExpanded(id: string): boolean {
+    return !!this.expandedMap[id];
   }
 }

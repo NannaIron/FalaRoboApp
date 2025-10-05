@@ -110,6 +110,7 @@
       list-style: none;
       margin: 0;
       padding: 0 0 6px 44px;
+
       .menu-item {
         .menu-link {
           display: flex;
@@ -125,7 +126,7 @@
           width: 12px;
           display: inline-block;
           text-align: left;
-          margin-left: -12px; 
+          margin-left: -12px;
           pointer-events: none;
           user-select: none;
         }
@@ -137,8 +138,51 @@
     }
   }
 
+  .menu-item--parent {
+    > .menu-link--parent {
+      display: flex;
+      align-items: center;
+      padding: 12px 16px;
+      background: transparent;
+      border: none;
+      width: 100%;
+      text-align: left;
+      color: #666;
+      font-weight: 600;
+      font-size: 0.95rem;
+      cursor: pointer;
+    }
+
+    .menu-icon {
+      width: 18px;
+      height: 18px;
+      margin-right: 12px;
+      object-fit: contain;
+      flex-shrink: 0;
+      opacity: 0.7;
+      transition: transform 200ms ease-in-out;
+      transform-origin: center;
+      transform: rotate(0deg);
+    }
+
+    &.expanded {
+      > .menu-link--parent {
+        color: #333;
+        background-color: #f8f9fa;
+      }
+
+      .menu-icon {
+        transform: rotate(90deg);
+      }
+    }
+  }
+
   @media (prefers-reduced-motion: reduce) {
     transition: none;
+
+    .menu-item--parent .menu-icon {
+      transition: none;
+    }
   }
 
   @media (max-width: 768px) {
@@ -146,6 +190,20 @@
     left: 12px;
     min-width: 180px;
     max-width: 200px;
+
+    .menu-list {
+      .menu-item {
+        .menu-link {
+          padding: 10px 14px;
+          font-size: 0.85rem;
+        }
+
+        .menu-sublist .menu-link {
+          padding: 8px 14px;
+          font-size: 0.85rem;
+        }
+      }
+    }
   }
 
   @media (min-width: 1200px) {
@@ -153,5 +211,19 @@
     left: 24px;
     min-width: 220px;
     max-width: 260px;
+
+    .menu-list {
+      .menu-item {
+        .menu-link {
+          padding: 14px 18px;
+          font-size: 0.95rem;
+        }
+
+        .menu-sublist .menu-link {
+          padding: 10px 18px;
+          font-size: 0.95rem;
+        }
+      }
+    }
   }
 }
