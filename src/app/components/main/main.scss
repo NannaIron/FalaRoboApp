@@ -1,7 +1,9 @@
 .main-container {
-  min-height: 100vh;
+  height: 100vh;
   background-color: #f8f9fa;
   padding: 20px;
+  display: flex;
+  flex-direction: column;
 
   .main-header {
     background: white;
@@ -92,6 +94,13 @@
         }
       }
     }
+  }
+
+  .main-content {
+    flex: 1;
+    min-height: 0;
+    width: 100%;
+    position: relative;
   }
 
   @media (max-width: 992px) {

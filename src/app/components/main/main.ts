@@ -3,13 +3,14 @@ import { CommonModule } from '@angular/common';
 import { Router } from '@angular/router';
 import { LoginService, User } from '../../../services/login.service';
 import { MenuComponent } from '../menu/menu';
+import { CanvasComponent } from '../canvas/canvas';
 
 @Component({
   selector: 'app-main',
   templateUrl: './main.html',
   styleUrl: './main.scss',
   standalone: true,
-  imports: [CommonModule, MenuComponent]
+  imports: [CommonModule, MenuComponent, CanvasComponent]
 })
 export class MainComponent implements OnInit {
   currentUser: User | null = null;
