@@ -11,6 +11,7 @@ import { CommonModule } from '@angular/common';
 export class MenuComponent {
   @Input() isOpen = false;
   @Output() closeMenu = new EventEmitter<void>();
+  @Output() select = new EventEmitter<string>();
 
   onBackdropClick(): void {
     this.closeMenu.emit();
@@ -18,5 +19,9 @@ export class MenuComponent {
 
   onMenuClick(event: Event): void {
     event.stopPropagation();
+  }
+
+  onSelect(id: string): void {
+    this.select.emit(id);
   }
 }

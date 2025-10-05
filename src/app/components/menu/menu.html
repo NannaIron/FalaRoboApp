@@ -1,41 +1,31 @@
 <div class="menu-backdrop" [class.show]="isOpen" (click)="onBackdropClick()">
   <div class="menu-popup" [class.show]="isOpen" (click)="onMenuClick($event)">
+    <div class="menu-header" aria-hidden="false">
+      <h3 class="menu-title" tabindex="-1">Motores</h3>
+    </div>
+
     <ul class="menu-list">
-      <li class="menu-item">
-        <a href="#" class="menu-link">
+      <li class="menu-item menu-item--parent">
+        <a href="#" class="menu-link" (click)="onSelect('motor-1'); $event.preventDefault()">
           <img src="/assets/images/arrow-right-outline.svg" alt="" class="menu-icon" />
-          <span class="menu-text">1</span>
+          <span class="menu-text">Motor 1</span>
         </a>
+
+        <ul class="menu-sublist" role="group" aria-label="Motor 1 detalhes">
+          <li class="menu-item">
+            <a href="#" class="menu-link menu-link--child" (click)="onSelect('pistao-grande'); $event.preventDefault()">
+              <span class="menu-bullet">-</span>
+              <span class="menu-text">Pistão Grande</span>
+            </a>
+          </li>
+          <li class="menu-item">
+            <a href="#" class="menu-link menu-link--child" (click)="onSelect('pistao-pequeno'); $event.preventDefault()">
+              <span class="menu-bullet">-</span>
+              <span class="menu-text">Pistão Pequeno</span>
+            </a>
+          </li>
+        </ul>
       </li>
-      <li class="menu-item">
-        <a href="#" class="menu-link">
-          <img src="/assets/images/arrow-right-outline.svg" alt="" class="menu-icon" />
-          <span class="menu-text">2</span>
-        </a>
-      </li>
-      <li class="menu-item">
-        <a href="#" class="menu-link">
-          <img src="/assets/images/arrow-right-outline.svg" alt="" class="menu-icon" />
-          <span class="menu-text">3</span>
-        </a>
-      </li>
-      <li class="menu-item">
-        <a href="#" class="menu-link">
-          <img src="/assets/images/arrow-right-outline.svg" alt="" class="menu-icon" />
-          <span class="menu-text">4</span>
-        </a>
-      </li>
-      <li class="menu-item">
-        <a href="#" class="menu-link">
-          <img src="/assets/images/arrow-right-outline.svg" alt="" class="menu-icon" />
-          <span class="menu-text">5</span>
-        </a>
-      </li>
-      <li class="menu-item">
-        <a href="#" class="menu-link">
-          <img src="/assets/images/arrow-right-outline.svg" alt="" class="menu-icon" />
-          <span class="menu-text">6</span>
-        </a>
     </ul>
   </div>
 </div>
