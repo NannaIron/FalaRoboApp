@@ -34,6 +34,8 @@ export class CanvasComponent implements OnInit, AfterViewInit, OnDestroy, OnChan
   
   private readonly ANIMATION_SPEED = 1.5;
   private readonly ANIMATION_DISTANCE = 2;
+  
+  private readonly PISTAO_GRANDE_DISTANCE = 1;
 
   constructor(private route: ActivatedRoute) {}
 
@@ -208,6 +210,9 @@ export class CanvasComponent implements OnInit, AfterViewInit, OnDestroy, OnChan
     const hasteScale = 2 / hasteMaxSize;
     pistao.haste.scale.setScalar(hasteScale);
     
+    pistao.haste.position.y = pistao.corpo.position.y;
+    pistao.haste.position.z = pistao.corpo.position.z;
+    
     pistao.haste.userData['initialPosition'] = pistao.haste.position.clone();
   }
   
@@ -283,9 +288,11 @@ export class CanvasComponent implements OnInit, AfterViewInit, OnDestroy, OnChan
     this.animationParams.pequeno.time += deltaTime * this.ANIMATION_SPEED;
     
     if (this.pistaoGrande.haste.visible) {
-      const grandeOffset = Math.sin(this.animationParams.grande.time) * this.ANIMATION_DISTANCE;
+      const sineValue = Math.sin(this.animationParams.grande.time);
+      const grandeOffset = Math.max(0, sineValue) * this.PISTAO_GRANDE_DISTANCE;
+      
       const initialPos = this.pistaoGrande.haste.userData['initialPosition'] as THREE.Vector3;
-      this.pistaoGrande.haste.position.x = initialPos.x + grandeOffset;
+      this.pistaoGrande.haste.position.z = initialPos.z + grandeOffset; 
     }
     
     if (this.pistaoPequeno.haste.visible) {
