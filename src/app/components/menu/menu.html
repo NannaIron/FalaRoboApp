@@ -24,23 +24,22 @@
           aria-label="Motor 1 detalhes"
           *ngIf="isExpanded('motor-1')"
         >
-
           <li class="menu-item">
-            <a href="#" class="menu-link menu-link--child" (click)="onSelect('completo'); $event.preventDefault(); $event.stopPropagation()">
+            <a href="#" class="menu-link menu-link--child" (click)="onSelect('completo'); $event.preventDefault(); $event.stopPropagation()" [class.selected]="selectedId === 'completo'">
               <span class="menu-bullet">-</span>
               <span class="menu-text">Completo</span>
             </a>
           </li>
 
           <li class="menu-item">
-            <a href="#" class="menu-link menu-link--child" (click)="onSelect('pistao-grande'); $event.preventDefault(); $event.stopPropagation()">
+            <a href="#" class="menu-link menu-link--child" (click)="onSelect('pistao-grande'); $event.preventDefault(); $event.stopPropagation()" [class.selected]="selectedId === 'pistao-grande'">
               <span class="menu-bullet">-</span>
               <span class="menu-text">Pistão Grande</span>
             </a>
           </li>
 
           <li class="menu-item">
-            <a href="#" class="menu-link menu-link--child" (click)="onSelect('pistao-pequeno'); $event.preventDefault(); $event.stopPropagation()">
+            <a href="#" class="menu-link menu-link--child" (click)="onSelect('pistao-pequeno'); $event.preventDefault(); $event.stopPropagation()" [class.selected]="selectedId === 'pistao-pequeno'">
               <span class="menu-bullet">-</span>
               <span class="menu-text">Pistão Pequeno</span>
             </a>

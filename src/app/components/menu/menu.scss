@@ -118,6 +118,8 @@
           gap: 8px;
           padding: 8px 16px;
           font-size: 0.9rem;
+          background: transparent;
+          color: #666;
         }
 
         .menu-bullet {
@@ -133,6 +135,27 @@
 
         .menu-link--child .menu-icon {
           display: none;
+        }
+
+        .menu-link--child.selected {
+          color: #0d6efd;
+          background: transparent !important;
+        }
+
+        .menu-link--child.selected .menu-text {
+          color: #0d6efd;
+        }
+
+        .menu-link--child:hover,
+        .menu-link--child:focus {
+          background-color: #f8f9fa;
+          color: #333;
+        }
+
+        .menu-link--child.selected:hover,
+        .menu-link--child.selected:focus {
+          background-color: transparent;
+          color: #0d6efd;
         }
       }
     }
@@ -162,7 +185,7 @@
       opacity: 0.7;
       transition: transform 200ms ease-in-out;
       transform-origin: center;
-      transform: rotate(0deg);
+      transform: rotate(0deg); 
     }
 
     &.expanded {

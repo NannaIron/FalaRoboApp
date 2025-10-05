@@ -13,6 +13,8 @@ export class MenuComponent {
   @Output() closeMenu = new EventEmitter<void>();
   @Output() select = new EventEmitter<string>();
 
+  selectedId: string | null = null;
+
   private expandedMap: Record<string, boolean> = {
     'motor-1': false
   };
@@ -26,6 +28,7 @@ export class MenuComponent {
   }
 
   onSelect(id: string): void {
+    this.selectedId = id;
     this.select.emit(id);
   }
 
