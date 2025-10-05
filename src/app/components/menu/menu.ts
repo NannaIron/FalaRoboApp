@@ -13,7 +13,7 @@ export class MenuComponent {
   @Output() closeMenu = new EventEmitter<void>();
   @Output() select = new EventEmitter<string>();
 
-  selectedId: string | null = null;
+  selectedId: string | null = 'chatbot';
 
   private expandedMap: Record<string, boolean> = {
     'motor-1': false

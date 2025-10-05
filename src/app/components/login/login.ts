@@ -30,7 +30,7 @@ export class LoginComponent implements OnInit {
     });
 
     if (this.loginService.isLoggedIn()) {
-      this.router.navigate(['/main']);
+      this.router.navigate(['/main/chatbot']);
     }
   }
 
@@ -67,7 +67,7 @@ export class LoginComponent implements OnInit {
             console.log('Login successful:', response);
             console.log('Token received:', response.token);
             
-            this.router.navigate(['/main']);
+            this.router.navigate(['/main/chatbot']);
           } else {
             this.errorMessage = response.message || 'Erro no login!';
           }

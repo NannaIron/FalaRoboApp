@@ -1,5 +1,6 @@
 import { Component, OnInit, OnDestroy, ElementRef, ViewChild, AfterViewInit, Input, OnChanges, SimpleChanges } from '@angular/core';
 import { CommonModule } from '@angular/common';
+import { ActivatedRoute } from '@angular/router';
 import * as THREE from 'three';
 import { OrbitControls } from 'three/examples/jsm/controls/OrbitControls.js';
 import { GLTFLoader } from 'three/examples/jsm/loaders/GLTFLoader.js';
@@ -34,9 +35,19 @@ export class CanvasComponent implements OnInit, AfterViewInit, OnDestroy, OnChan
   private readonly ANIMATION_SPEED = 1.5;
   private readonly ANIMATION_DISTANCE = 2;
 
-  constructor() {}
+  constructor(private route: ActivatedRoute) {}
 
-  ngOnInit(): void {}
+  ngOnInit(): void {
+    this.route.data.subscribe(data => {
+      if (data['selectedOption']) {
+        this.selectedOption = data['selectedOption'];
+        if (this.scene) {
+          this.updateVisibleModels();
+          this.adjustCameraForOption();
+        }
+      }
+    });
+  }
 
   ngAfterViewInit(): void {
     this.initThreeJS();

@@ -1,22 +1,20 @@
 import { Component, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
-import { Router } from '@angular/router';
+import { Router, RouterOutlet } from '@angular/router';
 import { LoginService, User } from '../../../services/login.service';
 import { MenuComponent } from '../menu/menu';
-import { CanvasComponent } from '../canvas/canvas';
 
 @Component({
   selector: 'app-main',
   templateUrl: './main.html',
   styleUrl: './main.scss',
   standalone: true,
-  imports: [CommonModule, MenuComponent, CanvasComponent]
+  imports: [CommonModule, MenuComponent, RouterOutlet]
 })
 export class MainComponent implements OnInit {
   currentUser: User | null = null;
   authToken: string | null = null;
   isMenuOpen = false;
-  selectedMenuOption: string = 'pistao-pequeno'; // Opção padrão
 
   constructor(
     private loginService: LoginService,
@@ -42,9 +40,26 @@ export class MainComponent implements OnInit {
   }
 
   onMenuSelect(selectedId: string): void {
-    // Fechar o menu após seleção
     this.closeMenu();
-    // Emitir evento para o Canvas
-    this.selectedMenuOption = selectedId;
+    
+    let route = '';
+    switch (selectedId) {
+      case 'chatbot':
+        route = '/main/chatbot';
+        break;
+      case 'completo':
+        route = '/main/complete';
+        break;
+      case 'pistao-grande':
+        route = '/main/piston-big';
+        break;
+      case 'pistao-pequeno':
+        route = '/main/piston-small';
+        break;
+      default:
+        route = '/main/chatbot';
+    }
+    
+    this.router.navigate([route]);
   }
 }

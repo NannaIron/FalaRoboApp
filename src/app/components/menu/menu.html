@@ -1,10 +1,17 @@
 <div class="menu-backdrop" [class.show]="isOpen" (click)="onBackdropClick()">
   <div class="menu-popup" [class.show]="isOpen" (click)="onMenuClick($event)">
     <div class="menu-header" aria-hidden="false">
-      <h3 class="menu-title" tabindex="-1">Motores</h3>
+      <h3 class="menu-title" tabindex="-1">Menu</h3>
     </div>
 
     <ul class="menu-list">
+      <li class="menu-item">
+        <a href="#" class="menu-link" (click)="onSelect('chatbot'); $event.preventDefault(); $event.stopPropagation()" [class.selected]="selectedId === 'chatbot'">
+          <img src="/assets/images/message-square-outline.svg" alt="" class="menu-icon" />
+          <span class="menu-text">ChatBot</span>
+        </a>
+      </li>
+      
       <li class="menu-item menu-item--parent" [class.expanded]="isExpanded('motor-1')">
         <button
           type="button"
