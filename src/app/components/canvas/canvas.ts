@@ -53,14 +53,11 @@ export class CanvasComponent implements OnInit, AfterViewInit, OnDestroy {
     const width = container.clientWidth;
     const height = container.clientHeight;
 
-    // Scene
     this.scene = new THREE.Scene();
 
-    // Camera
     this.camera = new THREE.PerspectiveCamera(75, width / height, 0.1, 1000);
     this.camera.position.set(2, 2, 2);
 
-    // Renderer
     this.renderer = new THREE.WebGLRenderer({ 
       antialias: true, 
       alpha: true
@@ -73,13 +70,12 @@ export class CanvasComponent implements OnInit, AfterViewInit, OnDestroy {
 
     container.appendChild(this.renderer.domElement);
 
-    // Controls
     this.controls = new OrbitControls(this.camera, this.renderer.domElement);
     this.controls.enableDamping = true;
     this.controls.dampingFactor = 0.05;
     this.controls.screenSpacePanning = false;
-    this.controls.minDistance = 0.5;
-    this.controls.maxDistance = 15;
+    this.controls.minDistance = 5;
+    this.controls.maxDistance = 10;
     this.controls.maxPolarAngle = Math.PI / 1.5;
 
     this.setupLighting();
