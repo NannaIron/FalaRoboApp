@@ -210,8 +210,21 @@ export class CanvasComponent implements OnInit, AfterViewInit, OnDestroy, OnChan
     const hasteScale = 2 / hasteMaxSize;
     pistao.haste.scale.setScalar(hasteScale);
     
-    pistao.haste.position.y = pistao.corpo.position.y;
-    pistao.haste.position.z = pistao.corpo.position.z;
+    // Check if this is the small piston (hastepistinho.glb) based on position
+    if (position.x > 0) { // This is the pistaoPequeno (hastepistinho)
+      // Rotate cilindropistinho (corpo) an additional 180 degrees
+      pistao.corpo.rotation.y = Math.PI; // 180 degrees in radians
+      
+      // Rotate 90 degrees horizontally (around Y axis)
+      pistao.haste.rotation.y = Math.PI / 2; // 90 degrees in radians
+      
+      // Center the haste with the corpo (cylinder)
+      pistao.haste.position.copy(pistao.corpo.position);
+    } else {
+      // For pistaoGrande, keep original positioning
+      pistao.haste.position.y = pistao.corpo.position.y;
+      pistao.haste.position.z = pistao.corpo.position.z;
+    }
     
     pistao.haste.userData['initialPosition'] = pistao.haste.position.clone();
   }
@@ -285,7 +298,8 @@ export class CanvasComponent implements OnInit, AfterViewInit, OnDestroy, OnChan
     if (!this.pistaoGrande || !this.pistaoPequeno) return;
     
     this.animationParams.grande.time += deltaTime * this.ANIMATION_SPEED;
-    this.animationParams.pequeno.time += deltaTime * this.ANIMATION_SPEED;
+    // Removed animation for pequeno piston as requested
+    // this.animationParams.pequeno.time += deltaTime * this.ANIMATION_SPEED;
     
     if (this.pistaoGrande.haste.visible) {
       const sineValue = Math.sin(this.animationParams.grande.time);
@@ -295,11 +309,8 @@ export class CanvasComponent implements OnInit, AfterViewInit, OnDestroy, OnChan
       this.pistaoGrande.haste.position.z = initialPos.z + grandeOffset; 
     }
     
-    if (this.pistaoPequeno.haste.visible) {
-      const pequenoOffset = Math.sin(this.animationParams.pequeno.time) * this.ANIMATION_DISTANCE;
-      const initialPos = this.pistaoPequeno.haste.userData['initialPosition'] as THREE.Vector3;
-      this.pistaoPequeno.haste.position.x = initialPos.x + pequenoOffset;
-    }
+    // Animation removed for pistaoPequeno.haste (hastepistinho.glb)
+    // The haste will remain static at its initial position
   }
 
   private setupResizeObserver(): void {
