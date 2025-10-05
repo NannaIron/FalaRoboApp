@@ -25,11 +25,12 @@
   </div>
 
   <div class="main-content">
-    <app-canvas></app-canvas>
+    <app-canvas [selectedOption]="selectedMenuOption"></app-canvas>
   </div>
 </div>
 
 <app-menu 
   [isOpen]="isMenuOpen" 
-  (closeMenu)="closeMenu()">
+  (closeMenu)="closeMenu()"
+  (select)="onMenuSelect($event)">
 </app-menu>

@@ -16,6 +16,7 @@ export class MainComponent implements OnInit {
   currentUser: User | null = null;
   authToken: string | null = null;
   isMenuOpen = false;
+  selectedMenuOption: string = 'pistao-pequeno'; // Opção padrão
 
   constructor(
     private loginService: LoginService,
@@ -38,5 +39,12 @@ export class MainComponent implements OnInit {
 
   closeMenu(): void {
     this.isMenuOpen = false;
+  }
+
+  onMenuSelect(selectedId: string): void {
+    // Fechar o menu após seleção
+    this.closeMenu();
+    // Emitir evento para o Canvas
+    this.selectedMenuOption = selectedId;
   }
 }

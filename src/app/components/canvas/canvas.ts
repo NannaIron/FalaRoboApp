@@ -1,4 +1,4 @@
-import { Component, OnInit, OnDestroy, ElementRef, ViewChild, AfterViewInit } from '@angular/core';
+import { Component, OnInit, OnDestroy, ElementRef, ViewChild, AfterViewInit, Input, OnChanges, SimpleChanges } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import * as THREE from 'three';
 import { OrbitControls } from 'three/examples/jsm/controls/OrbitControls.js';
@@ -11,16 +11,28 @@ import { GLTFLoader } from 'three/examples/jsm/loaders/GLTFLoader.js';
   standalone: true,
   imports: [CommonModule]
 })
-export class CanvasComponent implements OnInit, AfterViewInit, OnDestroy {
+export class CanvasComponent implements OnInit, AfterViewInit, OnDestroy, OnChanges {
   @ViewChild('canvasContainer', { static: true }) canvasContainer!: ElementRef;
+  @Input() selectedOption: string = 'pistao-pequeno';
 
   private scene!: THREE.Scene;
   private camera!: THREE.PerspectiveCamera;
   private renderer!: THREE.WebGLRenderer;
   private controls!: OrbitControls;
-  private model!: THREE.Group;
   private animationId!: number;
   private resizeObserver!: ResizeObserver;
+  private clock!: THREE.Clock;
+
+  private pistaoGrande!: { corpo: THREE.Group; haste: THREE.Group; };
+  private pistaoPequeno!: { corpo: THREE.Group; haste: THREE.Group; };
+  
+  private animationParams = {
+    grande: { direction: 1, time: 0 },
+    pequeno: { direction: -1, time: Math.PI } 
+  };
+  
+  private readonly ANIMATION_SPEED = 1.5;
+  private readonly ANIMATION_DISTANCE = 2;
 
   constructor() {}
 
@@ -28,9 +40,17 @@ export class CanvasComponent implements OnInit, AfterViewInit, OnDestroy {
 
   ngAfterViewInit(): void {
     this.initThreeJS();
-    this.loadModel();
+    this.clock = new THREE.Clock();
+    this.loadAllModels();
     this.animate();
     this.setupResizeObserver();
+  }
+
+  ngOnChanges(changes: SimpleChanges): void {
+    if (changes['selectedOption'] && this.scene) {
+      this.updateVisibleModels();
+      this.adjustCameraForOption();
+    }
   }
 
   ngOnDestroy(): void {
@@ -99,48 +119,169 @@ export class CanvasComponent implements OnInit, AfterViewInit, OnDestroy {
     this.scene.add(pointLight);
   }
 
-  private loadModel(): void {
+  private async loadAllModels(): Promise<void> {
     const loader = new GLTFLoader();
     
-    loader.load(
-      '/assets/models/cilindropistinho.glb',
-      (gltf) => {
-        this.model = gltf.scene;
-        
-        this.model.traverse((child) => {
-          if (child instanceof THREE.Mesh) {
-            child.castShadow = true;
-            child.receiveShadow = true;
-          }
-        });
-
-        const box = new THREE.Box3().setFromObject(this.model);
-        const center = box.getCenter(new THREE.Vector3());
-        this.model.position.sub(center);
-
-        const size = box.getSize(new THREE.Vector3());
-        const maxSize = Math.max(size.x, size.y, size.z);
-        
-        const targetSize = 3;
-        const scale = targetSize / maxSize;
-        this.model.scale.setScalar(scale);
-
-        this.scene.add(this.model);
-      },
-      (progress) => {
-        console.log('Carregamento do modelo:', (progress.loaded / progress.total * 100) + '%');
-      },
-      (error) => {
-        console.error('Erro ao carregar o modelo:', error);
-      }
-    );
+    try {
+      const [corpoGrande, hasteGrande] = await Promise.all([
+        this.loadSingleModel(loader, '/assets/models/corpopistao.glb'),
+        this.loadSingleModel(loader, '/assets/models/hastepistao.glb')
+      ]);
+      
+      const [corpoPequeno, hastePequeno] = await Promise.all([
+        this.loadSingleModel(loader, '/assets/models/cilindropistinho.glb'),
+        this.loadSingleModel(loader, '/assets/models/hastepistinho.glb')
+      ]);
+      
+      this.pistaoGrande = { corpo: corpoGrande, haste: hasteGrande };
+      this.setupPiston(this.pistaoGrande, new THREE.Vector3(-3, 0, 0));
+      
+      this.pistaoPequeno = { corpo: corpoPequeno, haste: hastePequeno };
+      this.setupPiston(this.pistaoPequeno, new THREE.Vector3(3, 0, 0));
+      
+      this.scene.add(this.pistaoGrande.corpo);
+      this.scene.add(this.pistaoGrande.haste);
+      this.scene.add(this.pistaoPequeno.corpo);
+      this.scene.add(this.pistaoPequeno.haste);
+      
+      this.updateVisibleModels();
+      this.adjustCameraForOption();
+      
+    } catch (error) {
+      console.error('Erro ao carregar os modelos:', error);
+    }
+  }
+  
+  private loadSingleModel(loader: GLTFLoader, path: string): Promise<THREE.Group> {
+    return new Promise((resolve, reject) => {
+      loader.load(
+        path,
+        (gltf) => {
+          const model = gltf.scene;
+          
+          model.traverse((child) => {
+            if (child instanceof THREE.Mesh) {
+              child.castShadow = true;
+              child.receiveShadow = true;
+            }
+          });
+          
+          resolve(model);
+        },
+        (progress) => {
+          console.log(`Carregando ${path}:`, (progress.loaded / progress.total * 100) + '%');
+        },
+        (error) => {
+          reject(error);
+        }
+      );
+    });
+  }
+  
+  private setupPiston(pistao: { corpo: THREE.Group; haste: THREE.Group; }, position: THREE.Vector3): void {
+    const corpoBox = new THREE.Box3().setFromObject(pistao.corpo);
+    const corpoCenter = corpoBox.getCenter(new THREE.Vector3());
+    pistao.corpo.position.sub(corpoCenter).add(position);
+    
+    const corpoSize = corpoBox.getSize(new THREE.Vector3());
+    const corpoMaxSize = Math.max(corpoSize.x, corpoSize.y, corpoSize.z);
+    const corpoScale = 2 / corpoMaxSize;
+    pistao.corpo.scale.setScalar(corpoScale);
+    
+    const hasteBox = new THREE.Box3().setFromObject(pistao.haste);
+    const hasteCenter = hasteBox.getCenter(new THREE.Vector3());
+    pistao.haste.position.sub(hasteCenter).add(position);
+    
+    const hasteSize = hasteBox.getSize(new THREE.Vector3());
+    const hasteMaxSize = Math.max(hasteSize.x, hasteSize.y, hasteSize.z);
+    const hasteScale = 2 / hasteMaxSize;
+    pistao.haste.scale.setScalar(hasteScale);
+    
+    pistao.haste.userData['initialPosition'] = pistao.haste.position.clone();
+  }
+  
+  private updateVisibleModels(): void {
+    if (!this.pistaoGrande || !this.pistaoPequeno) return;
+    
+    this.pistaoGrande.corpo.visible = false;
+    this.pistaoGrande.haste.visible = false;
+    this.pistaoPequeno.corpo.visible = false;
+    this.pistaoPequeno.haste.visible = false;
+    
+    switch (this.selectedOption) {
+      case 'pistao-grande':
+        this.pistaoGrande.corpo.visible = true;
+        this.pistaoGrande.haste.visible = true;
+        break;
+      case 'pistao-pequeno':
+        this.pistaoPequeno.corpo.visible = true;
+        this.pistaoPequeno.haste.visible = true;
+        break;
+      case 'completo':
+        this.pistaoGrande.corpo.visible = true;
+        this.pistaoGrande.haste.visible = true;
+        this.pistaoPequeno.corpo.visible = true;
+        this.pistaoPequeno.haste.visible = true;
+        break;
+    }
+  }
+  
+  private adjustCameraForOption(): void {
+    let targetDistance = 8;
+    let targetPosition = new THREE.Vector3(0, 0, 0);
+    
+    switch (this.selectedOption) {
+      case 'pistao-grande':
+        targetPosition.set(-3, 0, 0);
+        targetDistance = 6;
+        break;
+      case 'pistao-pequeno':
+        targetPosition.set(3, 0, 0);
+        targetDistance = 6;
+        break;
+      case 'completo':
+        targetPosition.set(0, 0, 0);
+        targetDistance = 10;
+        break;
+    }
+    
+    this.controls.target.copy(targetPosition);
+    this.controls.minDistance = targetDistance * 0.5;
+    this.controls.maxDistance = targetDistance * 1.5;
+    
+    const cameraPos = targetPosition.clone().add(new THREE.Vector3(targetDistance * 0.6, targetDistance * 0.6, targetDistance * 0.6));
+    this.camera.position.copy(cameraPos);
+    
+    this.controls.update();
   }
 
   private animate(): void {
     this.animationId = requestAnimationFrame(() => this.animate());
     
+    const deltaTime = this.clock.getDelta();
+    this.updatePistonAnimations(deltaTime);
+    
     this.controls.update();
     this.renderer.render(this.scene, this.camera);
+  }
+  
+  private updatePistonAnimations(deltaTime: number): void {
+    if (!this.pistaoGrande || !this.pistaoPequeno) return;
+    
+    this.animationParams.grande.time += deltaTime * this.ANIMATION_SPEED;
+    this.animationParams.pequeno.time += deltaTime * this.ANIMATION_SPEED;
+    
+    if (this.pistaoGrande.haste.visible) {
+      const grandeOffset = Math.sin(this.animationParams.grande.time) * this.ANIMATION_DISTANCE;
+      const initialPos = this.pistaoGrande.haste.userData['initialPosition'] as THREE.Vector3;
+      this.pistaoGrande.haste.position.x = initialPos.x + grandeOffset;
+    }
+    
+    if (this.pistaoPequeno.haste.visible) {
+      const pequenoOffset = Math.sin(this.animationParams.pequeno.time) * this.ANIMATION_DISTANCE;
+      const initialPos = this.pistaoPequeno.haste.userData['initialPosition'] as THREE.Vector3;
+      this.pistaoPequeno.haste.position.x = initialPos.x + pequenoOffset;
+    }
   }
 
   private setupResizeObserver(): void {
