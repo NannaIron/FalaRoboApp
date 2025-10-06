@@ -1,0 +1,70 @@
+.bolha-button {
+  position: fixed;
+  bottom: 24px;
+  right: 24px;
+  width: 56px;
+  height: 56px;
+  border: none;
+  border-radius: 50%;
+  background: linear-gradient(135deg, #1a365d 0%, #2d5a8a 25%, #4a90c2 50%, #7bb3d3 75%, #b3d4e6 100%);
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  box-shadow: 0 4px 12px rgba(26, 54, 93, 0.3);
+  transition: all 0.3s ease-in-out;
+  z-index: 1000;
+
+  .bolha-icon {
+    width: 24px;
+    height: 24px;
+    filter: brightness(0) invert(1);
+    transition: transform 0.2s ease-in-out;
+  }
+
+  &:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 6px 16px rgba(26, 54, 93, 0.4);
+
+    .bolha-icon {
+      transform: scale(1.1);
+    }
+  }
+
+  &:active {
+    transform: translateY(0);
+    box-shadow: 0 4px 12px rgba(26, 54, 93, 0.3);
+
+    .bolha-icon {
+      transform: scale(1);
+    }
+  }
+}
+
+@media (max-width: 768px) {
+  .bolha-button {
+    bottom: 20px;
+    right: 20px;
+    width: 52px;
+    height: 52px;
+
+    .bolha-icon {
+      width: 22px;
+      height: 22px;
+    }
+  }
+}
+
+@media (min-width: 1200px) {
+  .bolha-button {
+    bottom: 32px;
+    right: 32px;
+    width: 60px;
+    height: 60px;
+
+    .bolha-icon {
+      width: 26px;
+      height: 26px;
+    }
+  }
+}

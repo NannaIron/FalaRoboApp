@@ -1,20 +1,23 @@
 import { Component, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
-import { Router, RouterOutlet } from '@angular/router';
+import { Router, RouterOutlet, NavigationEnd } from '@angular/router';
 import { LoginService, User } from '../../../services/login.service';
 import { MenuComponent } from '../menu/menu';
+import { BolhaComponent } from '../bolha/bolha';
+import { filter } from 'rxjs/operators';
 
 @Component({
   selector: 'app-main',
   templateUrl: './main.html',
   styleUrl: './main.scss',
   standalone: true,
-  imports: [CommonModule, MenuComponent, RouterOutlet]
+  imports: [CommonModule, MenuComponent, RouterOutlet, BolhaComponent]
 })
 export class MainComponent implements OnInit {
   currentUser: User | null = null;
   authToken: string | null = null;
   isMenuOpen = false;
+  showBolha = true;
 
   constructor(
     private loginService: LoginService,
@@ -24,6 +27,16 @@ export class MainComponent implements OnInit {
   ngOnInit(): void {
     this.currentUser = this.loginService.getCurrentUser();
     this.authToken = this.loginService.getAuthToken();
+    
+    // Monitorar mudanças de rota para mostrar/ocultar a Bolha
+    this.router.events
+      .pipe(filter(event => event instanceof NavigationEnd))
+      .subscribe((event: NavigationEnd) => {
+        this.showBolha = !event.url.includes('/main/chatbot');
+      });
+      
+    // Verificar rota atual na inicialização
+    this.showBolha = !this.router.url.includes('/main/chatbot');
   }
 
   logout(): void {    
