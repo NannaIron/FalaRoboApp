@@ -25,6 +25,7 @@
           placeholder="Digite sua mensagem..."
           [(ngModel)]="userInput"
           [disabled]="loading"
+          (keydown.enter)="sendMessage()"
         />
         <button class="send-button" (click)="sendMessage()" [disabled]="loading || !userInput.trim()">
           <img src="/assets/images/corner-down-right-outline.svg" alt="Enviar" class="send-icon" />
