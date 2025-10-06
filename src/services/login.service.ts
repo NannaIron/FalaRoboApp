@@ -90,6 +90,7 @@ export class LoginService {
     this.currentUser = null;
     this.authToken = null;
     this.clearUserFromStorage();
+    sessionStorage.removeItem('falaRoboSessionMessages');
   }
 
   isLoggedIn(): boolean {

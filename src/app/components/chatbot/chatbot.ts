@@ -14,12 +14,12 @@ export class ChatbotComponent implements OnInit {
   userInput: string = '';
   messages: { type: 'user-message' | 'bot-message'; text: string }[] = [];
   loading: boolean = false;
-  private storageKey = 'falaRoboMessages';
+  private storageKey = 'falaRoboSessionMessages';
 
   constructor(private sensorService: SensorService) {}
 
   ngOnInit(): void {
-    const saved = localStorage.getItem(this.storageKey);
+    const saved = sessionStorage.getItem(this.storageKey);
     if (saved) {
       this.messages = JSON.parse(saved);
     }
@@ -56,6 +56,6 @@ export class ChatbotComponent implements OnInit {
   }
 
   private saveMessages(): void {
-    localStorage.setItem(this.storageKey, JSON.stringify(this.messages));
+    sessionStorage.setItem(this.storageKey, JSON.stringify(this.messages));
   }
 }
