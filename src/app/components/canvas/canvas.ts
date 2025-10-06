@@ -29,13 +29,14 @@ export class CanvasComponent implements OnInit, AfterViewInit, OnDestroy, OnChan
   
   private animationParams = {
     grande: { direction: 1, time: 0 },
-    pequeno: { direction: -1, time: Math.PI } 
+    pequeno: { direction: -1, time: Math.PI, isAnimating: true, cycleCount: 0 } 
   };
   
   private readonly ANIMATION_SPEED = 1.5;
   private readonly ANIMATION_DISTANCE = 2;
   
   private readonly PISTAO_GRANDE_DISTANCE = 1;
+  private readonly PISTAO_PEQUENO_DISTANCE = 1.5;
 
   constructor(private route: ActivatedRoute) {}
 
@@ -210,18 +211,13 @@ export class CanvasComponent implements OnInit, AfterViewInit, OnDestroy, OnChan
     const hasteScale = 2 / hasteMaxSize;
     pistao.haste.scale.setScalar(hasteScale);
     
-    // Check if this is the small piston (hastepistinho.glb) based on position
-    if (position.x > 0) { // This is the pistaoPequeno (hastepistinho)
-      // Rotate cilindropistinho (corpo) an additional 180 degrees
-      pistao.corpo.rotation.y = Math.PI; // 180 degrees in radians
+    if (position.x > 0) { 
+      pistao.corpo.rotation.y = Math.PI; 
       
-      // Rotate 90 degrees horizontally (around Y axis)
-      pistao.haste.rotation.y = Math.PI / 2; // 90 degrees in radians
+      pistao.haste.rotation.y = Math.PI / 2; 
       
-      // Center the haste with the corpo (cylinder)
       pistao.haste.position.copy(pistao.corpo.position);
     } else {
-      // For pistaoGrande, keep original positioning
       pistao.haste.position.y = pistao.corpo.position.y;
       pistao.haste.position.z = pistao.corpo.position.z;
     }
@@ -298,8 +294,10 @@ export class CanvasComponent implements OnInit, AfterViewInit, OnDestroy, OnChan
     if (!this.pistaoGrande || !this.pistaoPequeno) return;
     
     this.animationParams.grande.time += deltaTime * this.ANIMATION_SPEED;
-    // Removed animation for pequeno piston as requested
-    // this.animationParams.pequeno.time += deltaTime * this.ANIMATION_SPEED;
+    
+    if (this.animationParams.pequeno.isAnimating) {
+      this.animationParams.pequeno.time += deltaTime * this.ANIMATION_SPEED;
+    }
     
     if (this.pistaoGrande.haste.visible) {
       const sineValue = Math.sin(this.animationParams.grande.time);
@@ -309,8 +307,13 @@ export class CanvasComponent implements OnInit, AfterViewInit, OnDestroy, OnChan
       this.pistaoGrande.haste.position.z = initialPos.z + grandeOffset; 
     }
     
-    // Animation removed for pistaoPequeno.haste (hastepistinho.glb)
-    // The haste will remain static at its initial position
+    if (this.pistaoPequeno.haste.visible && this.animationParams.pequeno.isAnimating) {
+      const sineValue = Math.sin(this.animationParams.pequeno.time);
+      const pequenoOffset = Math.max(0, sineValue) * this.PISTAO_PEQUENO_DISTANCE;
+      
+      const initialPos = this.pistaoPequeno.haste.userData['initialPosition'] as THREE.Vector3;
+      this.pistaoPequeno.haste.position.x = initialPos.x + pequenoOffset;
+    }
   }
 
   private setupResizeObserver(): void {
