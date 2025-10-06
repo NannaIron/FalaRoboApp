@@ -18,7 +18,7 @@ import { GLTFLoader } from 'three/examples/jsm/loaders/GLTFLoader.js';
 import { PopupService } from '../../../services/popup.service';
 import { ChatbotComponent } from '../chatbot/chatbot';
 import { Subscription, interval } from 'rxjs';
-import { startWith, switchMap } from 'rxjs/operators';
+import { startWith, switchMap, distinctUntilChanged } from 'rxjs/operators';
 import { ModelService, PistonId } from '../../../services/model.service';
 import { SensorService } from '../../../services/sensor.service';
 
@@ -80,8 +80,17 @@ export class CanvasComponent implements OnInit, AfterViewInit, OnDestroy, OnChan
     this.modelSub = this.modelService.states$.subscribe(() => {
     });
 
-    this.sensorSub = this.sensorService.getState().subscribe((data: any) => {
+    this.sensorSub = this.sensorService.getState().pipe(
+      distinctUntilChanged((prev, curr) => {
+        if (!prev || !curr) return false;
+        return prev.running === curr.running &&
+               prev.bar === curr.bar &&
+               prev.positions?.small === curr.positions?.small &&
+               prev.positions?.big === curr.positions?.big;
+      })
+    ).subscribe((data: any) => {
       if (!data) return;
+      
       this.state = data;
       this.running = !!data.running;
       this.animationSpeed = typeof data.bar === 'number' ? data.bar : 1;
