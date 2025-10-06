@@ -1,6 +1,6 @@
 import { Injectable } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
-import { Observable } from 'rxjs';
+import { Observable, BehaviorSubject, tap } from 'rxjs';
 import { environments } from '../environments/environments';
 
 @Injectable({
@@ -9,6 +9,9 @@ import { environments } from '../environments/environments';
 export class SensorService {
   private commonUrl = environments.commonUrl;
   private aiUrl = environments.aiUrl;
+
+  private stateSubject = new BehaviorSubject<any>(null);
+  public state$ = this.stateSubject.asObservable();
 
   constructor(private http: HttpClient) {}
 
@@ -30,7 +33,17 @@ export class SensorService {
   }
 
   getState(): Observable<any> {
-    return this.http.get(`${this.commonUrl}/state`);
+    return this.state$;
+  }
+
+  fetchOnce(): Observable<any> {
+    return this.http.get(`${this.commonUrl}/state`).pipe(
+      tap((data) => this.stateSubject.next(data))
+    );
+  }
+
+  setState(data: any): void {
+    this.stateSubject.next(data);
   }
 
   getAI(question: string): Observable<string> {

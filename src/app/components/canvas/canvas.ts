@@ -17,7 +17,8 @@ import { OrbitControls } from 'three/examples/jsm/controls/OrbitControls.js';
 import { GLTFLoader } from 'three/examples/jsm/loaders/GLTFLoader.js';
 import { PopupService } from '../../../services/popup.service';
 import { ChatbotComponent } from '../chatbot/chatbot';
-import { Subscription } from 'rxjs';
+import { Subscription, interval } from 'rxjs';
+import { startWith, switchMap } from 'rxjs/operators';
 import { ModelService, PistonId } from '../../../services/model.service';
 import { SensorService } from '../../../services/sensor.service';
 
@@ -33,14 +34,15 @@ export class CanvasComponent implements OnInit, AfterViewInit, OnDestroy, OnChan
   @Input() selectedOption: string = 'pistao-pequeno';
 
   state: any = null;
-  animationSpeed = 1; 
-  running = false; 
+  animationSpeed = 1;
+  running = false;
   firstToAnimate: 'small' | 'big' = 'small';
 
   isPopupOpen = false;
   private popupSub!: Subscription;
   private modelSub!: Subscription;
   private sensorSub!: Subscription;
+  private pollingSub!: Subscription;
 
   private scene!: THREE.Scene;
   private camera!: THREE.PerspectiveCamera;
@@ -58,7 +60,7 @@ export class CanvasComponent implements OnInit, AfterViewInit, OnDestroy, OnChan
     pequeno: { direction: -1, time: Math.PI, isAnimating: true }
   };
 
-  private readonly BASE_ANIMATION_SPEED = 1.5; 
+  private readonly BASE_ANIMATION_SPEED = 1.5;
   private readonly PISTAO_GRANDE_DISTANCE = 1;
   private readonly PISTAO_PEQUENO_DISTANCE = 1.1;
 
@@ -79,6 +81,7 @@ export class CanvasComponent implements OnInit, AfterViewInit, OnDestroy, OnChan
     });
 
     this.sensorSub = this.sensorService.getState().subscribe((data: any) => {
+      if (!data) return;
       this.state = data;
       this.running = !!data.running;
       this.animationSpeed = typeof data.bar === 'number' ? data.bar : 1;
@@ -103,6 +106,8 @@ export class CanvasComponent implements OnInit, AfterViewInit, OnDestroy, OnChan
     this.loadAllModels();
     this.animate();
     this.setupResizeObserver();
+
+    this.startStatePolling();
   }
 
   ngOnChanges(changes: SimpleChanges): void {
@@ -120,10 +125,26 @@ export class CanvasComponent implements OnInit, AfterViewInit, OnDestroy, OnChan
     if (this.popupSub) this.popupSub.unsubscribe();
     if (this.modelSub) this.modelSub.unsubscribe();
     if (this.sensorSub) this.sensorSub.unsubscribe();
+    if (this.pollingSub) this.pollingSub.unsubscribe();
   }
 
   onOverlayClick(_event: MouseEvent): void {
     this.popup.close();
+  }
+
+  private startStatePolling(): void {
+    this.pollingSub = interval(2100)
+      .pipe(
+        startWith(0),
+        switchMap(() => this.sensorService.fetchOnce())
+      )
+      .subscribe({
+        next: () => {
+        },
+        error: (err) => {
+          console.error('Erro ao buscar estado:', err);
+        }
+      });
   }
 
   private handleAnimations(): void {
@@ -145,11 +166,11 @@ export class CanvasComponent implements OnInit, AfterViewInit, OnDestroy, OnChan
     const bigIsForwards = positions.big === 'Forwards';
 
     if (smallIsForwards && !bigIsForwards) {
-      this.animationParams.pequeno.time = 0;    
-      this.animationParams.grande.time = Math.PI;  
+      this.animationParams.pequeno.time = 0;
+      this.animationParams.grande.time = Math.PI;
     } else if (bigIsForwards && !smallIsForwards) {
-      this.animationParams.grande.time = 0;       
-      this.animationParams.pequeno.time = Math.PI; 
+      this.animationParams.grande.time = 0;
+      this.animationParams.pequeno.time = Math.PI;
     } else {
       if (this.firstToAnimate === 'small') {
         this.animationParams.pequeno.time = 0;
@@ -176,7 +197,6 @@ export class CanvasComponent implements OnInit, AfterViewInit, OnDestroy, OnChan
       if (initGrande) this.pistaoGrande.haste.position.copy(initGrande);
       if (initPequeno) this.pistaoPequeno.haste.position.copy(initPequeno);
     }
-
   }
 
   private initThreeJS(): void {
@@ -255,6 +275,7 @@ export class CanvasComponent implements OnInit, AfterViewInit, OnDestroy, OnChan
       this.updateVisibleModels();
       this.adjustCameraForOption();
     } catch (error) {
+      console.error('Erro ao carregar modelos:', error);
     }
   }
 

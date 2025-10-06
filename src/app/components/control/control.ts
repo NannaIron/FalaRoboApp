@@ -2,8 +2,7 @@ import { Component, OnDestroy, OnInit, inject } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { SensorService } from '../../../services/sensor.service';
-import { Subscription, interval } from 'rxjs';
-import { switchMap, startWith } from 'rxjs/operators';
+import { Subscription } from 'rxjs';
 
 @Component({
   selector: 'app-control',
@@ -20,17 +19,12 @@ export class ControlComponent implements OnInit, OnDestroy {
   pressureInput: string = '';
 
   ngOnInit(): void {
-    this.sub = interval(1500)
-      .pipe(
-        startWith(0),
-        switchMap(() => this.sensorService.getState())
-      )
-      .subscribe({
-        next: (state: any) => {
-          this.running = !!state?.running;
-        },
-        error: () => {}
-      });
+    this.sub = this.sensorService.getState().subscribe({
+      next: (state: any) => {
+        this.running = !!state?.running;
+      },
+      error: () => {}
+    });
   }
 
   ngOnDestroy(): void {
@@ -41,10 +35,18 @@ export class ControlComponent implements OnInit, OnDestroy {
     const next = !this.running;
     this.sensorService.postStart(next).subscribe({
       next: () => {
+        this.sensorService.setState({ ...(this.getLatestStateSnapshot() || {}), running: next });
         this.running = next;
       },
       error: () => {}
     });
+  }
+
+  private getLatestStateSnapshot(): any {
+    let snap: any = null;
+    const sub = this.sensorService.getState().subscribe(s => snap = s);
+    sub.unsubscribe();
+    return snap;
   }
 
   allowOnlyNumbers(event: KeyboardEvent): void {
@@ -92,6 +94,8 @@ export class ControlComponent implements OnInit, OnDestroy {
 
     this.sensorService.postPressure(num).subscribe({
       next: () => {
+        const snapshot = this.getLatestStateSnapshot() || {};
+        this.sensorService.setState({ ...snapshot, bar: num });
       },
       error: () => {
       }
