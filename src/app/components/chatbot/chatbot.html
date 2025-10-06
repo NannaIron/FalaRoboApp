@@ -13,7 +13,7 @@
       </div>
 
       <div *ngFor="let msg of messages" class="message" [ngClass]="msg.type">
-        <div class="message-content">{{ msg.text }}</div>
+        <div class="message-content" [ngStyle]="{ 'white-space': 'pre-line' }">{{ msg.text }}</div>
       </div>
     </div>
 
