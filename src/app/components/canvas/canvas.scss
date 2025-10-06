@@ -24,32 +24,24 @@
     background: transparent;
     display: flex;
     justify-content: flex-end;
-    align-items: stretch; 
+    align-items: stretch;
     pointer-events: auto;
   }
 
   .chatbot-popup {
     width: 30vw;
     max-width: 560px;
-    min-width: 320px;
-    height: calc(100vh - 48px); 
-    margin: 24px; 
-    background: #ffffff;
-    border-radius: 10px;
-    overflow: hidden;
-    box-shadow: 0 12px 40px rgba(0, 0, 0, 0.18);
-    pointer-events: auto;
-    display: flex;
-    flex-direction: column;
-  }
-}
+    min-width: 300px;
 
-@media (max-width: 1024px) {
-  .canvas-wrapper {
-    .chatbot-popup {
-      width: 36vw;
-      min-width: 300px;
-    }
+    height: calc(100vh - 48px); 
+    align-self: stretch;
+    margin: 24px;
+    background: #ffffff;
+    border-radius: 8px;
+    overflow: hidden;
+    box-shadow: 0 12px 40px rgba(0, 0, 0, 0.12);
+    pointer-events: auto;
+    flex-direction: column;
   }
 }
 
