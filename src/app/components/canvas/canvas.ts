@@ -19,6 +19,7 @@ import { PopupService } from '../../../services/popup.service';
 import { ChatbotComponent } from '../chatbot/chatbot';
 import { Subscription } from 'rxjs';
 import { ModelService, PistonId } from '../../../services/model.service';
+import { SensorService } from '../../../services/sensor.service';
 
 @Component({
   selector: 'app-canvas',
@@ -31,9 +32,15 @@ export class CanvasComponent implements OnInit, AfterViewInit, OnDestroy, OnChan
   @ViewChild('canvasContainer', { static: true }) canvasContainer!: ElementRef;
   @Input() selectedOption: string = 'pistao-pequeno';
 
+  state: any = null;
+  animationSpeed = 1; 
+  running = false; 
+  firstToAnimate: 'small' | 'big' = 'small';
+
   isPopupOpen = false;
   private popupSub!: Subscription;
   private modelSub!: Subscription;
+  private sensorSub!: Subscription;
 
   private scene!: THREE.Scene;
   private camera!: THREE.PerspectiveCamera;
@@ -51,7 +58,7 @@ export class CanvasComponent implements OnInit, AfterViewInit, OnDestroy, OnChan
     pequeno: { direction: -1, time: Math.PI, isAnimating: true }
   };
 
-  private readonly ANIMATION_SPEED = 1.5;
+  private readonly BASE_ANIMATION_SPEED = 1.5; 
   private readonly PISTAO_GRANDE_DISTANCE = 1;
   private readonly PISTAO_PEQUENO_DISTANCE = 1.1;
 
@@ -59,6 +66,7 @@ export class CanvasComponent implements OnInit, AfterViewInit, OnDestroy, OnChan
 
   private popup = inject(PopupService);
   private modelService = inject(ModelService);
+  private sensorService = inject(SensorService);
 
   constructor(private route: ActivatedRoute) {}
 
@@ -68,6 +76,14 @@ export class CanvasComponent implements OnInit, AfterViewInit, OnDestroy, OnChan
     });
 
     this.modelSub = this.modelService.states$.subscribe(() => {
+    });
+
+    this.sensorSub = this.sensorService.getState().subscribe((data: any) => {
+      this.state = data;
+      this.running = !!data.running;
+      this.animationSpeed = typeof data.bar === 'number' ? data.bar : 1;
+      this.firstToAnimate = data.positions && data.positions.small === 'Forwards' ? 'small' : 'big';
+      this.handleAnimations();
     });
 
     this.route.data.subscribe(data => {
@@ -103,10 +119,51 @@ export class CanvasComponent implements OnInit, AfterViewInit, OnDestroy, OnChan
     if (this.renderer) this.renderer.dispose();
     if (this.popupSub) this.popupSub.unsubscribe();
     if (this.modelSub) this.modelSub.unsubscribe();
+    if (this.sensorSub) this.sensorSub.unsubscribe();
   }
 
   onOverlayClick(_event: MouseEvent): void {
     this.popup.close();
+  }
+
+  private handleAnimations(): void {
+    if (this.running) {
+      this.startAnimations();
+    } else {
+      this.pauseAnimations();
+    }
+  }
+
+  private startAnimations(): void {
+    if (this.pistaoGrande && this.pistaoPequeno) {
+      if (this.pistaoGrande.haste.visible) this.animationParams.grande.isAnimating = true;
+      if (this.pistaoPequeno.haste.visible) this.animationParams.pequeno.isAnimating = true;
+    }
+
+    if (this.firstToAnimate === 'small') {
+      this.animationParams.pequeno.time = this.animationParams.pequeno.time; 
+      this.animationParams.grande.time = this.animationParams.pequeno.time + 0.25; 
+    } else {
+      this.animationParams.grande.time = this.animationParams.grande.time;
+      this.animationParams.pequeno.time = this.animationParams.grande.time + 0.25;
+    }
+
+    console.log(`🔹 Iniciando animações com velocidade x${this.animationSpeed}`);
+    console.log(`🔹 Primeiro a animar: ${this.firstToAnimate}`);
+  }
+
+  private pauseAnimations(): void {
+    if (this.pistaoGrande && this.pistaoPequeno) {
+      this.animationParams.grande.isAnimating = false;
+      this.animationParams.pequeno.isAnimating = false;
+
+      const initGrande = this.pistaoGrande.haste.userData['initialPosition'] as THREE.Vector3;
+      const initPequeno = this.pistaoPequeno.haste.userData['initialPosition'] as THREE.Vector3;
+      if (initGrande) this.pistaoGrande.haste.position.copy(initGrande);
+      if (initPequeno) this.pistaoPequeno.haste.position.copy(initPequeno);
+    }
+
+    console.log('⏸️ Animações pausadas - resetando posições');
   }
 
   private initThreeJS(): void {
@@ -297,7 +354,9 @@ export class CanvasComponent implements OnInit, AfterViewInit, OnDestroy, OnChan
     this.controls.minDistance = targetDistance * 0.25;
     this.controls.maxDistance = targetDistance * 2;
 
-    const cameraPos = targetPosition.clone().add(new THREE.Vector3(targetDistance * 0.6, targetDistance * 0.6, targetDistance * 0.6));
+    const cameraPos = targetPosition
+      .clone()
+      .add(new THREE.Vector3(targetDistance * 0.6, targetDistance * 0.6, targetDistance * 0.6));
     this.camera.position.copy(cameraPos);
 
     this.controls.update();
@@ -307,7 +366,9 @@ export class CanvasComponent implements OnInit, AfterViewInit, OnDestroy, OnChan
     this.animationId = requestAnimationFrame(() => this.animate());
 
     const deltaTime = this.clock.getDelta();
-    this.updatePistonAnimations(deltaTime);
+    const effectiveDelta = deltaTime * (this.animationSpeed || 1);
+
+    this.updatePistonAnimations(effectiveDelta);
 
     this.controls.update();
     this.renderer.render(this.scene, this.camera);
@@ -339,66 +400,69 @@ export class CanvasComponent implements OnInit, AfterViewInit, OnDestroy, OnChan
     const grandePendingResume = this.modelService.hasPendingResume('grande');
     const pequenoPendingResume = this.modelService.hasPendingResume('pequeno');
 
-    if (grandePendingPause) {
-      this.animationParams.grande.isAnimating = true;
-      this.animationParams.pequeno.isAnimating = true;
-
-      if (this.hastesAtInitialPositionFor('grande')) {
-        this.animationParams.grande.isAnimating = false;
-        this.modelService.notifyPaused('grande');
-
-        if (this.hastesAtInitialPositionFor('pequeno')) {
-          this.animationParams.pequeno.isAnimating = false;
-          this.modelService.notifyPaused('pequeno');
-        }
-      }
-    } else if (pequenoPendingPause) {
-      this.animationParams.grande.isAnimating = true;
-      this.animationParams.pequeno.isAnimating = true;
-
-      if (this.hastesAtInitialPositionFor('pequeno')) {
-        this.animationParams.pequeno.isAnimating = false;
-        this.modelService.notifyPaused('pequeno');
+    if (!this.running) {
+    } else {
+      if (grandePendingPause) {
+        this.animationParams.grande.isAnimating = true;
+        this.animationParams.pequeno.isAnimating = true;
 
         if (this.hastesAtInitialPositionFor('grande')) {
           this.animationParams.grande.isAnimating = false;
           this.modelService.notifyPaused('grande');
-        }
-      }
-    }
 
-    if (grandePendingResume) {
-      if (!this.animationParams.grande.isAnimating) {
+          if (this.hastesAtInitialPositionFor('pequeno')) {
+            this.animationParams.pequeno.isAnimating = false;
+            this.modelService.notifyPaused('pequeno');
+          }
+        }
+      } else if (pequenoPendingPause) {
         this.animationParams.grande.isAnimating = true;
-        this.modelService.notifyResumed('grande');
-      }
+        this.animationParams.pequeno.isAnimating = true;
 
-      if (this.hastesAtInitialPositionFor('grande')) {
-        if (!this.animationParams.pequeno.isAnimating) {
-          this.animationParams.pequeno.isAnimating = true;
-          this.modelService.notifyResumed('pequeno');
+        if (this.hastesAtInitialPositionFor('pequeno')) {
+          this.animationParams.pequeno.isAnimating = false;
+          this.modelService.notifyPaused('pequeno');
+
+          if (this.hastesAtInitialPositionFor('grande')) {
+            this.animationParams.grande.isAnimating = false;
+            this.modelService.notifyPaused('grande');
+          }
         }
       }
-    } else if (pequenoPendingResume) {
-      if (!this.animationParams.pequeno.isAnimating) {
-        this.animationParams.pequeno.isAnimating = true;
-        this.modelService.notifyResumed('pequeno');
-      }
 
-      if (this.hastesAtInitialPositionFor('pequeno')) {
+      if (grandePendingResume) {
         if (!this.animationParams.grande.isAnimating) {
           this.animationParams.grande.isAnimating = true;
           this.modelService.notifyResumed('grande');
         }
+
+        if (this.hastesAtInitialPositionFor('grande')) {
+          if (!this.animationParams.pequeno.isAnimating) {
+            this.animationParams.pequeno.isAnimating = true;
+            this.modelService.notifyResumed('pequeno');
+          }
+        }
+      } else if (pequenoPendingResume) {
+        if (!this.animationParams.pequeno.isAnimating) {
+          this.animationParams.pequeno.isAnimating = true;
+          this.modelService.notifyResumed('pequeno');
+        }
+
+        if (this.hastesAtInitialPositionFor('pequeno')) {
+          if (!this.animationParams.grande.isAnimating) {
+            this.animationParams.grande.isAnimating = true;
+            this.modelService.notifyResumed('grande');
+          }
+        }
       }
     }
 
-    if (this.animationParams.grande.isAnimating) {
-      this.animationParams.grande.time += deltaTime * this.ANIMATION_SPEED;
+    if (this.running && this.animationParams.grande.isAnimating) {
+      this.animationParams.grande.time += deltaTime * this.BASE_ANIMATION_SPEED;
     }
 
-    if (this.animationParams.pequeno.isAnimating) {
-      this.animationParams.pequeno.time += deltaTime * this.ANIMATION_SPEED;
+    if (this.running && this.animationParams.pequeno.isAnimating) {
+      this.animationParams.pequeno.time += deltaTime * this.BASE_ANIMATION_SPEED;
     }
 
     if (this.pistaoGrande.haste.visible) {
