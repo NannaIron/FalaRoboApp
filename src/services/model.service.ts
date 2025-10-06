@@ -4,14 +4,11 @@ import { BehaviorSubject } from 'rxjs';
 export type PistonId = 'grande' | 'pequeno';
 
 interface PistonState {
-  animating: boolean;     // currently animating (true) or paused (false)
-  pendingPause: boolean;   // requested to pause when reaches initial
-  pendingResume: boolean;  // requested resume sequencing
+  animating: boolean; 
+  pendingPause: boolean;
+  pendingResume: boolean;
 }
 
-/**
- * Serviço central para coordenar pausa/resume sequencial entre pistões.
- */
 @Injectable({ providedIn: 'root' })
 export class ModelService {
   private state: Record<PistonId, PistonState> = {
@@ -29,7 +26,6 @@ export class ModelService {
     };
   }
 
-  // Query helpers
   isAnimating(which: PistonId): boolean {
     return this.state[which].animating;
   }
@@ -42,34 +38,28 @@ export class ModelService {
     return this.state[which].pendingResume;
   }
 
-  // Requests from UI
   requestPause(which: PistonId): void {
-    // set pending pause for requested piston; sequencing handled by Canvas via checks + notifyPaused
     this.state[which].pendingPause = true;
     this.emit();
   }
 
   requestResume(which: PistonId): void {
-    // request resume for the piston; sequencing handled by Canvas via checks + notifyResumed
     this.state[which].pendingResume = true;
     this.emit();
   }
 
-  // Called by Canvas when it has actually paused a piston (arrived at initial pos)
   notifyPaused(which: PistonId): void {
     this.state[which].pendingPause = false;
     this.state[which].animating = false;
     this.emit();
   }
 
-  // Called by Canvas when it has actually resumed a piston (started animating)
   notifyResumed(which: PistonId): void {
     this.state[which].pendingResume = false;
     this.state[which].animating = true;
     this.emit();
   }
 
-  // Force resume immediately (used rarely)
   forceResume(which: PistonId): void {
     this.state[which].pendingPause = false;
     this.state[which].pendingResume = false;
@@ -77,7 +67,6 @@ export class ModelService {
     this.emit();
   }
 
-  // Force pause immediately (used rarely)
   forcePause(which: PistonId): void {
     this.state[which].pendingPause = false;
     this.state[which].pendingResume = false;
