@@ -188,3 +188,13 @@
     }
   }
 }
+
+.control-wrapper {
+  position: fixed;
+  left: 24px;
+  bottom: 24px;
+  width: 100px;
+  height: 300px;
+  z-index: 1200;
+  pointer-events: auto;
+}

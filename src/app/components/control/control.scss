@@ -1,0 +1,30 @@
+.control-root {
+  width: 100px;
+  height: 300px;
+  display: flex;
+  flex-direction: column;
+  background: #ffffff;
+  border-radius: 8px;
+  box-shadow: 0 6px 20px rgba(26, 54, 93, 0.12);
+  padding: 12px;
+  gap: 8px;
+  color: #223;
+  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+  border: 1px solid rgba(0,0,0,0.04);
+}
+
+.control-header {
+  font-size: 0.9rem;
+  font-weight: 600;
+  color: #1a365d;
+  text-align: center;
+}
+
+.control-body {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  align-items: stretch;
+  justify-content: flex-start;
+  flex: 1;
+}

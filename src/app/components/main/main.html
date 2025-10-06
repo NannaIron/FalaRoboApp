@@ -31,8 +31,12 @@
 
 <app-bolha *ngIf="showBolha"></app-bolha>
 
-<app-menu 
-  [isOpen]="isMenuOpen" 
+<div class="control-wrapper" *ngIf="showControl" aria-hidden="{{ showControl ? 'false' : 'true' }}">
+  <app-control></app-control>
+</div>
+
+<app-menu
+  [isOpen]="isMenuOpen"
   (closeMenu)="closeMenu()"
   (select)="onMenuSelect($event)">
 </app-menu>

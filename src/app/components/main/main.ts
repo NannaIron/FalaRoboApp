@@ -1,45 +1,58 @@
-import { Component, OnInit } from '@angular/core';
+import { Component, OnInit, OnDestroy, inject } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { Router, RouterOutlet, NavigationEnd } from '@angular/router';
 import { LoginService, User } from '../../../services/login.service';
 import { MenuComponent } from '../menu/menu';
 import { BolhaComponent } from '../bolha/bolha';
+import { ControlComponent } from '../control/control';
 import { filter } from 'rxjs/operators';
+import { Subscription } from 'rxjs';
 
 @Component({
   selector: 'app-main',
   templateUrl: './main.html',
   styleUrl: './main.scss',
   standalone: true,
-  imports: [CommonModule, MenuComponent, RouterOutlet, BolhaComponent]
+  imports: [CommonModule, MenuComponent, RouterOutlet, BolhaComponent, ControlComponent]
 })
-export class MainComponent implements OnInit {
+export class MainComponent implements OnInit, OnDestroy {
   currentUser: User | null = null;
   authToken: string | null = null;
   isMenuOpen = false;
   showBolha = true;
+  showControl = true;
 
-  constructor(
-    private loginService: LoginService,
-    private router: Router
-  ) {}
+  private router = inject(Router);
+  private loginService = inject(LoginService);
+  private sub!: Subscription;
+
+  constructor() {}
 
   ngOnInit(): void {
     this.currentUser = this.loginService.getCurrentUser();
     this.authToken = this.loginService.getAuthToken();
-    
-    // Monitorar mudanças de rota para mostrar/ocultar a Bolha
-    this.router.events
+
+    this.updateVisibility(this.router.url);
+
+    this.sub = this.router.events
       .pipe(filter(event => event instanceof NavigationEnd))
       .subscribe((event: NavigationEnd) => {
-        this.showBolha = !event.url.includes('/main/chatbot');
+        this.updateVisibility(event.urlAfterRedirects);
       });
-      
-    // Verificar rota atual na inicialização
-    this.showBolha = !this.router.url.includes('/main/chatbot');
   }
 
-  logout(): void {    
+  ngOnDestroy(): void {
+    if (this.sub) this.sub.unsubscribe();
+  }
+
+  private updateVisibility(url: string): void {
+    const normalized = url.split('?')[0].split('#')[0];
+    const isChatbot = normalized === '/main/chatbot' || normalized === '/main/chatbot/';
+    this.showBolha = !isChatbot;
+    this.showControl = !isChatbot;
+  }
+
+  logout(): void {
     this.loginService.logout();
     this.router.navigate(['/login']);
   }
@@ -54,7 +67,7 @@ export class MainComponent implements OnInit {
 
   onMenuSelect(selectedId: string): void {
     this.closeMenu();
-    
+
     let route = '';
     switch (selectedId) {
       case 'chatbot':
@@ -72,7 +85,7 @@ export class MainComponent implements OnInit {
       default:
         route = '/main/chatbot';
     }
-    
+
     this.router.navigate([route]);
   }
 }

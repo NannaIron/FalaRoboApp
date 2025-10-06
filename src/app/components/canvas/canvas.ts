@@ -302,7 +302,7 @@ export class CanvasComponent implements OnInit, AfterViewInit, OnDestroy, OnChan
 
     this.controls.target.copy(targetPosition);
     this.controls.minDistance = targetDistance * 0.25;
-    this.controls.maxDistance = targetDistance * 1.5;
+    this.controls.maxDistance = targetDistance * 2;
 
     const cameraPos = targetPosition.clone().add(new THREE.Vector3(targetDistance * 0.6, targetDistance * 0.6, targetDistance * 0.6));
     this.camera.position.copy(cameraPos);
