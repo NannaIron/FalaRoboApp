@@ -1,3 +1,9 @@
 <div class="canvas-wrapper">
   <div #canvasContainer class="canvas-container"></div>
+
+  <div class="chatbot-popup-overlay" *ngIf="isPopupOpen" (click)="onOverlayClick($event)">
+    <div class="chatbot-popup" (click)="$event.stopPropagation()">
+      <app-chatbot></app-chatbot>
+    </div>
+  </div>
 </div>
