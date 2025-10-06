@@ -5,31 +5,32 @@
     <button
       type="button"
       class="control-icon-btn"
-      aria-label="Grande Play/Pause"
-      (click)="onToggleGrande()"
-      [attr.data-state]="(grandeAnimating ? 'animating' : 'paused')"
-      title="Controle Pistão Grande"
+      aria-label="Play/Pause geral"
+      (click)="onToggleRunning()"
+      [attr.data-state]="running ? 'running' : 'stopped'"
+      title="Iniciar / Parar todos os pistões"
     >
       <img
-        [src]="grandeAnimating ? '/assets/images/stop-circle-outline.svg' : '/assets/images/play-circle-outline.svg'"
+        [src]="running ? '/assets/images/stop-circle-outline.svg' : '/assets/images/play-circle-outline.svg'"
         alt=""
         class="control-svg"
       />
     </button>
 
-    <button
-      type="button"
-      class="control-icon-btn mt-2"
-      aria-label="Pequeno Play/Pause"
-      (click)="onTogglePequeno()"
-      [attr.data-state]="(pequenoAnimating ? 'animating' : 'paused')"
-      title="Controle Pistão Pequeno"
-    >
-      <img
-        [src]="pequenoAnimating ? '/assets/images/stop-circle-outline.svg' : '/assets/images/play-circle-outline.svg'"
-        alt=""
-        class="control-svg"
-      />
-    </button>
+    <div class="pressure-area">
+      <div class="pressure-title">Pressão</div>
+      <div class="pressure-row">
+        <input
+          type="text"
+          inputmode="numeric"
+          pattern="[0-9]*"
+          placeholder="bar"
+          aria-label="Valor da pressão em bar"
+          [(ngModel)]="pressureInput"
+          (keydown)="allowOnlyNumbers($event)"
+        />
+        <button type="button" class="send-btn" (click)="onSendPressure()" title="Enviar pressão">Enviar</button>
+      </div>
+    </div>
   </div>
 </div>
