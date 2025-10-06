@@ -7,6 +7,7 @@ import { BolhaComponent } from '../bolha/bolha';
 import { ControlComponent } from '../control/control';
 import { filter } from 'rxjs/operators';
 import { Subscription } from 'rxjs';
+import { SensorService } from '../../../services/sensor.service';
 
 @Component({
   selector: 'app-main',
@@ -26,9 +27,10 @@ export class MainComponent implements OnInit, OnDestroy {
   private loginService = inject(LoginService);
   private sub!: Subscription;
 
-  constructor() {}
+  constructor(private sensorService: SensorService) {}
 
   ngOnInit(): void {
+    this.sensorService.postSensors().subscribe();
     this.currentUser = this.loginService.getCurrentUser();
     this.authToken = this.loginService.getAuthToken();
 
