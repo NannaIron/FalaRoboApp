@@ -7,7 +7,8 @@ import {
   AfterViewInit,
   Input,
   OnChanges,
-  SimpleChanges
+  SimpleChanges,
+  inject
 } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { ActivatedRoute } from '@angular/router';
@@ -17,6 +18,7 @@ import { GLTFLoader } from 'three/examples/jsm/loaders/GLTFLoader.js';
 import { PopupService } from '../../../services/popup.service';
 import { ChatbotComponent } from '../chatbot/chatbot';
 import { Subscription } from 'rxjs';
+import { ModelService, PistonId } from '../../../services/model.service';
 
 @Component({
   selector: 'app-canvas',
@@ -31,6 +33,7 @@ export class CanvasComponent implements OnInit, AfterViewInit, OnDestroy, OnChan
 
   isPopupOpen = false;
   private popupSub!: Subscription;
+  private modelSub!: Subscription;
 
   private scene!: THREE.Scene;
   private camera!: THREE.PerspectiveCamera;
@@ -44,21 +47,27 @@ export class CanvasComponent implements OnInit, AfterViewInit, OnDestroy, OnChan
   private pistaoPequeno!: { corpo: THREE.Group; haste: THREE.Group };
 
   private animationParams = {
-    grande: { direction: 1, time: 0 },
-    pequeno: { direction: -1, time: Math.PI, isAnimating: true, cycleCount: 0 }
+    grande: { direction: 1, time: 0, isAnimating: true },
+    pequeno: { direction: -1, time: Math.PI, isAnimating: true }
   };
 
   private readonly ANIMATION_SPEED = 1.5;
-  private readonly ANIMATION_DISTANCE = 2;
-
   private readonly PISTAO_GRANDE_DISTANCE = 1;
   private readonly PISTAO_PEQUENO_DISTANCE = 1.1;
 
-  constructor(private route: ActivatedRoute, private popup: PopupService) {}
+  private epsilon = 0.001;
+
+  private popup = inject(PopupService);
+  private modelService = inject(ModelService);
+
+  constructor(private route: ActivatedRoute) {}
 
   ngOnInit(): void {
     this.popupSub = this.popup.open$.subscribe(open => {
       this.isPopupOpen = open;
+    });
+
+    this.modelSub = this.modelService.states$.subscribe(() => {
     });
 
     this.route.data.subscribe(data => {
@@ -88,21 +97,12 @@ export class CanvasComponent implements OnInit, AfterViewInit, OnDestroy, OnChan
   }
 
   ngOnDestroy(): void {
-    if (this.animationId) {
-      cancelAnimationFrame(this.animationId);
-    }
-    if (this.resizeObserver) {
-      this.resizeObserver.disconnect();
-    }
-    if (this.controls) {
-      this.controls.dispose();
-    }
-    if (this.renderer) {
-      this.renderer.dispose();
-    }
-    if (this.popupSub) {
-      this.popupSub.unsubscribe();
-    }
+    if (this.animationId) cancelAnimationFrame(this.animationId);
+    if (this.resizeObserver) this.resizeObserver.disconnect();
+    if (this.controls) this.controls.dispose();
+    if (this.renderer) this.renderer.dispose();
+    if (this.popupSub) this.popupSub.unsubscribe();
+    if (this.modelSub) this.modelSub.unsubscribe();
   }
 
   onOverlayClick(_event: MouseEvent): void {
@@ -119,10 +119,7 @@ export class CanvasComponent implements OnInit, AfterViewInit, OnDestroy, OnChan
     this.camera = new THREE.PerspectiveCamera(75, width / height, 0.1, 1000);
     this.camera.position.set(2, 2, 2);
 
-    this.renderer = new THREE.WebGLRenderer({
-      antialias: true,
-      alpha: true
-    });
+    this.renderer = new THREE.WebGLRenderer({ antialias: true, alpha: true });
     this.renderer.setSize(width, height);
     this.renderer.setPixelRatio(window.devicePixelRatio);
     this.renderer.setClearColor(0x000000, 0);
@@ -198,14 +195,12 @@ export class CanvasComponent implements OnInit, AfterViewInit, OnDestroy, OnChan
         path,
         gltf => {
           const model = gltf.scene;
-
           model.traverse(child => {
-            if (child instanceof THREE.Mesh) {
-              child.castShadow = true;
-              child.receiveShadow = true;
+            if ((child as any).isMesh) {
+              (child as THREE.Mesh).castShadow = true;
+              (child as THREE.Mesh).receiveShadow = true;
             }
           });
-
           resolve(model);
         },
         progress => {
@@ -216,9 +211,7 @@ export class CanvasComponent implements OnInit, AfterViewInit, OnDestroy, OnChan
             console.log(`Carregando ${path}`);
           }
         },
-        error => {
-          reject(error);
-        }
+        error => reject(error)
       );
     });
   }
@@ -320,10 +313,89 @@ export class CanvasComponent implements OnInit, AfterViewInit, OnDestroy, OnChan
     this.renderer.render(this.scene, this.camera);
   }
 
+  private distanceToInitial(which: PistonId): number {
+    if (which === 'grande') {
+      const init = this.pistaoGrande.haste.userData['initialPosition'] as THREE.Vector3;
+      return this.pistaoGrande.haste.position.distanceTo(init);
+    } else {
+      const init = this.pistaoPequeno.haste.userData['initialPosition'] as THREE.Vector3;
+      return this.pistaoPequeno.haste.position.distanceTo(init);
+    }
+  }
+
+  private hastesAtInitialPositionFor(which: PistonId): boolean {
+    return this.distanceToInitial(which) <= this.epsilon;
+  }
+
+  private hastesAtInitialPositionBoth(): boolean {
+    return this.hastesAtInitialPositionFor('grande') && this.hastesAtInitialPositionFor('pequeno');
+  }
+
   private updatePistonAnimations(deltaTime: number): void {
     if (!this.pistaoGrande || !this.pistaoPequeno) return;
 
-    this.animationParams.grande.time += deltaTime * this.ANIMATION_SPEED;
+    const grandePendingPause = this.modelService.hasPendingPause('grande');
+    const pequenoPendingPause = this.modelService.hasPendingPause('pequeno');
+    const grandePendingResume = this.modelService.hasPendingResume('grande');
+    const pequenoPendingResume = this.modelService.hasPendingResume('pequeno');
+
+    if (grandePendingPause) {
+      this.animationParams.grande.isAnimating = true;
+      this.animationParams.pequeno.isAnimating = true;
+
+      if (this.hastesAtInitialPositionFor('grande')) {
+        this.animationParams.grande.isAnimating = false;
+        this.modelService.notifyPaused('grande');
+
+        if (this.hastesAtInitialPositionFor('pequeno')) {
+          this.animationParams.pequeno.isAnimating = false;
+          this.modelService.notifyPaused('pequeno');
+        }
+      }
+    } else if (pequenoPendingPause) {
+      this.animationParams.grande.isAnimating = true;
+      this.animationParams.pequeno.isAnimating = true;
+
+      if (this.hastesAtInitialPositionFor('pequeno')) {
+        this.animationParams.pequeno.isAnimating = false;
+        this.modelService.notifyPaused('pequeno');
+
+        if (this.hastesAtInitialPositionFor('grande')) {
+          this.animationParams.grande.isAnimating = false;
+          this.modelService.notifyPaused('grande');
+        }
+      }
+    }
+
+    if (grandePendingResume) {
+      if (!this.animationParams.grande.isAnimating) {
+        this.animationParams.grande.isAnimating = true;
+        this.modelService.notifyResumed('grande');
+      }
+
+      if (this.hastesAtInitialPositionFor('grande')) {
+        if (!this.animationParams.pequeno.isAnimating) {
+          this.animationParams.pequeno.isAnimating = true;
+          this.modelService.notifyResumed('pequeno');
+        }
+      }
+    } else if (pequenoPendingResume) {
+      if (!this.animationParams.pequeno.isAnimating) {
+        this.animationParams.pequeno.isAnimating = true;
+        this.modelService.notifyResumed('pequeno');
+      }
+
+      if (this.hastesAtInitialPositionFor('pequeno')) {
+        if (!this.animationParams.grande.isAnimating) {
+          this.animationParams.grande.isAnimating = true;
+          this.modelService.notifyResumed('grande');
+        }
+      }
+    }
+
+    if (this.animationParams.grande.isAnimating) {
+      this.animationParams.grande.time += deltaTime * this.ANIMATION_SPEED;
+    }
 
     if (this.animationParams.pequeno.isAnimating) {
       this.animationParams.pequeno.time += deltaTime * this.ANIMATION_SPEED;
@@ -332,15 +404,13 @@ export class CanvasComponent implements OnInit, AfterViewInit, OnDestroy, OnChan
     if (this.pistaoGrande.haste.visible) {
       const sineValue = Math.sin(this.animationParams.grande.time);
       const grandeOffset = Math.max(0, sineValue) * this.PISTAO_GRANDE_DISTANCE;
-
       const initialPos = this.pistaoGrande.haste.userData['initialPosition'] as THREE.Vector3;
       this.pistaoGrande.haste.position.z = initialPos.z + grandeOffset;
     }
 
-    if (this.pistaoPequeno.haste.visible && this.animationParams.pequeno.isAnimating) {
+    if (this.pistaoPequeno.haste.visible) {
       const sineValue = Math.sin(this.animationParams.pequeno.time);
       const pequenoOffset = Math.max(0, sineValue) * this.PISTAO_PEQUENO_DISTANCE;
-
       const initialPos = this.pistaoPequeno.haste.userData['initialPosition'] as THREE.Vector3;
       this.pistaoPequeno.haste.position.z = initialPos.z + pequenoOffset;
     }

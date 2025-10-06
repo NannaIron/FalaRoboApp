@@ -1,7 +1,35 @@
 <div class="control-root" role="region" aria-label="Control Component">
   <div class="control-header">Ações</div>
+
   <div class="control-body">
-    <button class="btn btn-sm btn-primary w-100">Ação 1</button>
-    <button class="btn btn-sm btn-outline-secondary w-100 mt-2">Ação 2</button>
+    <button
+      type="button"
+      class="control-icon-btn"
+      aria-label="Grande Play/Pause"
+      (click)="onToggleGrande()"
+      [attr.data-state]="(grandeAnimating ? 'animating' : 'paused')"
+      title="Controle Pistão Grande"
+    >
+      <img
+        [src]="grandeAnimating ? '/assets/images/stop-circle-outline.svg' : '/assets/images/play-circle-outline.svg'"
+        alt=""
+        class="control-svg"
+      />
+    </button>
+
+    <button
+      type="button"
+      class="control-icon-btn mt-2"
+      aria-label="Pequeno Play/Pause"
+      (click)="onTogglePequeno()"
+      [attr.data-state]="(pequenoAnimating ? 'animating' : 'paused')"
+      title="Controle Pistão Pequeno"
+    >
+      <img
+        [src]="pequenoAnimating ? '/assets/images/stop-circle-outline.svg' : '/assets/images/play-circle-outline.svg'"
+        alt=""
+        class="control-svg"
+      />
+    </button>
   </div>
 </div>
