@@ -47,7 +47,7 @@ export class SensorService {
   }
 
   getAI(question: string): Observable<string> {
-    const url = `${this.aiUrl}/ai?question="${encodeURIComponent(question)}"`;
+    const url = `${this.aiUrl}/ai?question=${question}`;
     return this.http.get(url, { responseType: 'text' });
   }
 }

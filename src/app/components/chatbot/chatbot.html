@@ -3,7 +3,7 @@
     <h2 class="chatbot-title">FalaRobo ChatBot</h2>
     <p class="chatbot-subtitle">Controle seu motor usando um Assistente!</p>
   </div>
-  
+
   <div class="chatbot-content">
     <div class="chatbot-messages">
       <div class="message bot-message">
@@ -11,18 +11,22 @@
           Olá! Eu sou o FalaRobo, seu assistente virtual. Como posso ajudá-lo hoje?
         </div>
       </div>
-      
+
+      <div *ngFor="let msg of messages" class="message" [ngClass]="msg.type">
+        <div class="message-content">{{ msg.text }}</div>
+      </div>
     </div>
-    
+
     <div class="chatbot-input-area">
       <div class="input-group">
-        <input 
-          type="text" 
-          class="chat-input" 
+        <input
+          type="text"
+          class="chat-input"
           placeholder="Digite sua mensagem..."
-          disabled
+          [(ngModel)]="userInput"
+          [disabled]="loading"
         />
-        <button class="send-button" disabled>
+        <button class="send-button" (click)="sendMessage()" [disabled]="loading || !userInput.trim()">
           <img src="/assets/images/corner-down-right-outline.svg" alt="Enviar" class="send-icon" />
         </button>
       </div>
