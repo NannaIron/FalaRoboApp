@@ -212,12 +212,11 @@ export class CanvasComponent implements OnInit, AfterViewInit, OnDestroy, OnChan
     pistao.haste.scale.setScalar(hasteScale);
     
     if (position.x > 0) { 
-      pistao.corpo.rotation.y = Math.PI; 
+      pistao.corpo.rotation.y = Math.PI + Math.PI / 2 + Math.PI;
       
-      pistao.haste.rotation.y = Math.PI / 2; 
+      pistao.haste.rotation.y = Math.PI / 2 + Math.PI / 2 + Math.PI; 
       
-      // Reduzir escala do hastepistinho.glb para deixá-lo menor
-      pistao.haste.scale.multiplyScalar(0.8); // Reduz para 80% do tamanho original
+      pistao.haste.scale.multiplyScalar(0.8);
       
       pistao.haste.position.copy(pistao.corpo.position);
     } else {
@@ -315,7 +314,7 @@ export class CanvasComponent implements OnInit, AfterViewInit, OnDestroy, OnChan
       const pequenoOffset = Math.max(0, sineValue) * this.PISTAO_PEQUENO_DISTANCE;
       
       const initialPos = this.pistaoPequeno.haste.userData['initialPosition'] as THREE.Vector3;
-      this.pistaoPequeno.haste.position.x = initialPos.x + pequenoOffset;
+      this.pistaoPequeno.haste.position.z = initialPos.z + pequenoOffset;
     }
   }
 
