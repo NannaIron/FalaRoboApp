@@ -36,7 +36,7 @@ export class CanvasComponent implements OnInit, AfterViewInit, OnDestroy, OnChan
   private readonly ANIMATION_DISTANCE = 2;
   
   private readonly PISTAO_GRANDE_DISTANCE = 1;
-  private readonly PISTAO_PEQUENO_DISTANCE = 1.5;
+  private readonly PISTAO_PEQUENO_DISTANCE = 1.1;
 
   constructor(private route: ActivatedRoute) {}
 
@@ -215,6 +215,9 @@ export class CanvasComponent implements OnInit, AfterViewInit, OnDestroy, OnChan
       pistao.corpo.rotation.y = Math.PI; 
       
       pistao.haste.rotation.y = Math.PI / 2; 
+      
+      // Reduzir escala do hastepistinho.glb para deixá-lo menor
+      pistao.haste.scale.multiplyScalar(0.8); // Reduz para 80% do tamanho original
       
       pistao.haste.position.copy(pistao.corpo.position);
     } else {
