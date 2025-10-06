@@ -108,7 +108,7 @@ export class CanvasComponent implements OnInit, AfterViewInit, OnDestroy, OnChan
     this.controls.enableDamping = true;
     this.controls.dampingFactor = 0.05;
     this.controls.screenSpacePanning = false;
-    this.controls.minDistance = 5;
+    this.controls.minDistance = 2;
     this.controls.maxDistance = 10;
     this.controls.maxPolarAngle = Math.PI / 1.5;
 
@@ -148,10 +148,10 @@ export class CanvasComponent implements OnInit, AfterViewInit, OnDestroy, OnChan
       ]);
       
       this.pistaoGrande = { corpo: corpoGrande, haste: hasteGrande };
-      this.setupPiston(this.pistaoGrande, new THREE.Vector3(-3, 0, 0));
+      this.setupPiston(this.pistaoGrande, new THREE.Vector3(-1.5, 0, 0));
       
       this.pistaoPequeno = { corpo: corpoPequeno, haste: hastePequeno };
-      this.setupPiston(this.pistaoPequeno, new THREE.Vector3(3, 0, 0));
+      this.setupPiston(this.pistaoPequeno, new THREE.Vector3(1.5, 0, 0));
       
       this.scene.add(this.pistaoGrande.corpo);
       this.scene.add(this.pistaoGrande.haste);
@@ -259,21 +259,21 @@ export class CanvasComponent implements OnInit, AfterViewInit, OnDestroy, OnChan
     
     switch (this.selectedOption) {
       case 'pistao-grande':
-        targetPosition.set(-3, 0, 0);
-        targetDistance = 6;
+        targetPosition.set(-1.5, 0, 0);
+        targetDistance = 3;
         break;
       case 'pistao-pequeno':
-        targetPosition.set(3, 0, 0);
-        targetDistance = 6;
+        targetPosition.set(1.5, 0, 0);
+        targetDistance = 3;
         break;
       case 'completo':
         targetPosition.set(0, 0, 0);
-        targetDistance = 10;
+        targetDistance = 4;
         break;
     }
     
     this.controls.target.copy(targetPosition);
-    this.controls.minDistance = targetDistance * 0.5;
+    this.controls.minDistance = targetDistance * 0.25;
     this.controls.maxDistance = targetDistance * 1.5;
     
     const cameraPos = targetPosition.clone().add(new THREE.Vector3(targetDistance * 0.6, targetDistance * 0.6, targetDistance * 0.6));
