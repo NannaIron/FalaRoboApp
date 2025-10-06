@@ -140,16 +140,30 @@ export class CanvasComponent implements OnInit, AfterViewInit, OnDestroy, OnChan
       if (this.pistaoPequeno.haste.visible) this.animationParams.pequeno.isAnimating = true;
     }
 
-    if (this.firstToAnimate === 'small') {
-      this.animationParams.pequeno.time = this.animationParams.pequeno.time; 
-      this.animationParams.grande.time = this.animationParams.pequeno.time + 0.25; 
+    const positions = this.state && this.state.positions ? this.state.positions : { small: 'None', big: 'None' };
+    const smallIsForwards = positions.small === 'Forwards';
+    const bigIsForwards = positions.big === 'Forwards';
+
+    if (smallIsForwards && !bigIsForwards) {
+      this.animationParams.pequeno.time = 0;    
+      this.animationParams.grande.time = Math.PI;  
+    } else if (bigIsForwards && !smallIsForwards) {
+      this.animationParams.grande.time = 0;       
+      this.animationParams.pequeno.time = Math.PI; 
     } else {
-      this.animationParams.grande.time = this.animationParams.grande.time;
-      this.animationParams.pequeno.time = this.animationParams.grande.time + 0.25;
+      if (this.firstToAnimate === 'small') {
+        this.animationParams.pequeno.time = 0;
+        this.animationParams.grande.time = Math.PI;
+      } else {
+        this.animationParams.grande.time = 0;
+        this.animationParams.pequeno.time = Math.PI;
+      }
     }
 
-    console.log(`🔹 Iniciando animações com velocidade x${this.animationSpeed}`);
-    console.log(`🔹 Primeiro a animar: ${this.firstToAnimate}`);
+    if (this.pistaoGrande && this.pistaoPequeno) {
+      if (this.pistaoGrande.haste.visible) this.animationParams.grande.isAnimating = true;
+      if (this.pistaoPequeno.haste.visible) this.animationParams.pequeno.isAnimating = true;
+    }
   }
 
   private pauseAnimations(): void {
@@ -163,7 +177,6 @@ export class CanvasComponent implements OnInit, AfterViewInit, OnDestroy, OnChan
       if (initPequeno) this.pistaoPequeno.haste.position.copy(initPequeno);
     }
 
-    console.log('⏸️ Animações pausadas - resetando posições');
   }
 
   private initThreeJS(): void {
@@ -242,7 +255,6 @@ export class CanvasComponent implements OnInit, AfterViewInit, OnDestroy, OnChan
       this.updateVisibleModels();
       this.adjustCameraForOption();
     } catch (error) {
-      console.error('Erro ao carregar os modelos:', error);
     }
   }
 
