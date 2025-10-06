@@ -25,12 +25,15 @@ export class MainComponent implements OnInit, OnDestroy {
 
   private router = inject(Router);
   private loginService = inject(LoginService);
+  private sensorService = inject(SensorService);
   private sub!: Subscription;
 
-  constructor(private sensorService: SensorService) {}
-
   ngOnInit(): void {
-    this.sensorService.postSensors().subscribe();
+    this.sensorService.postSensors().subscribe({
+      next: () => console.log('Sensores fixos enviados na inicialização'),
+      error: (err) => console.error('Erro ao enviar sensores fixos:', err)
+    });
+    
     this.currentUser = this.loginService.getCurrentUser();
     this.authToken = this.loginService.getAuthToken();
 

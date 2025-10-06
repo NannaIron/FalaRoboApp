@@ -18,7 +18,7 @@ import { GLTFLoader } from 'three/examples/jsm/loaders/GLTFLoader.js';
 import { PopupService } from '../../../services/popup.service';
 import { ChatbotComponent } from '../chatbot/chatbot';
 import { Subscription, interval } from 'rxjs';
-import { startWith, switchMap, distinctUntilChanged } from 'rxjs/operators';
+import { startWith, switchMap, distinctUntilChanged, tap } from 'rxjs/operators';
 import { ModelService, PistonId } from '../../../services/model.service';
 import { SensorService } from '../../../services/sensor.service';
 
@@ -65,6 +65,7 @@ export class CanvasComponent implements OnInit, AfterViewInit, OnDestroy, OnChan
   private readonly PISTAO_PEQUENO_DISTANCE = 1.1;
 
   private epsilon = 0.001;
+  private lastProcessedState: any = null;
 
   private popup = inject(PopupService);
   private modelService = inject(ModelService);
@@ -80,22 +81,11 @@ export class CanvasComponent implements OnInit, AfterViewInit, OnDestroy, OnChan
     this.modelSub = this.modelService.states$.subscribe(() => {
     });
 
-    this.sensorSub = this.sensorService.getState().pipe(
-      distinctUntilChanged((prev, curr) => {
-        if (!prev || !curr) return false;
-        return prev.running === curr.running &&
-               prev.bar === curr.bar &&
-               prev.positions?.small === curr.positions?.small &&
-               prev.positions?.big === curr.positions?.big;
-      })
-    ).subscribe((data: any) => {
+    this.sensorSub = this.sensorService.getState().subscribe((data: any) => {
       if (!data) return;
       
-      this.state = data;
-      this.running = !!data.running;
-      this.animationSpeed = typeof data.bar === 'number' ? data.bar : 1;
-      this.firstToAnimate = data.positions && data.positions.small === 'Forwards' ? 'small' : 'big';
-      this.handleAnimations();
+      console.log('Processando estado no canvas:', data);
+      this.processState(data);
     });
 
     this.route.data.subscribe(data => {
@@ -145,15 +135,39 @@ export class CanvasComponent implements OnInit, AfterViewInit, OnDestroy, OnChan
     this.pollingSub = interval(2100)
       .pipe(
         startWith(0),
-        switchMap(() => this.sensorService.fetchOnce())
+        switchMap(() => this.sensorService.fetchOnce()),
+        tap(data => {
+          if (data && data.positions && data.sensors) {
+            console.log('Enviando sensores opostos após polling...');
+            this.sensorService.postOppositeSensors(data).subscribe({
+              next: () => console.log('Sensores opostos enviados com sucesso'),
+              error: (err) => console.error('Erro ao enviar sensores opostos:', err)
+            });
+          }
+        })
       )
       .subscribe({
         next: () => {
+          console.log('Polling completado');
         },
         error: (err) => {
           console.error('Erro ao buscar estado:', err);
         }
       });
+  }
+
+  private processState(data: any): void {
+    this.state = data;
+    this.running = !!data.running;
+    this.animationSpeed = typeof data.bar === 'number' ? data.bar : 1;
+
+    if (!this.lastProcessedState || 
+        this.lastProcessedState.positions?.small !== data.positions?.small) {
+      this.firstToAnimate = data.positions && data.positions.small === 'Forwards' ? 'small' : 'big';
+    }
+
+    this.handleAnimations();
+    this.lastProcessedState = { ...data };
   }
 
   private handleAnimations(): void {
@@ -302,14 +316,7 @@ export class CanvasComponent implements OnInit, AfterViewInit, OnDestroy, OnChan
           });
           resolve(model);
         },
-        progress => {
-          try {
-            const percent = progress.total ? (progress.loaded / progress.total) * 100 : 0;
-            console.log(`Carregando ${path}: ${percent.toFixed(2)}%`);
-          } catch {
-            console.log(`Carregando ${path}`);
-          }
-        },
+        undefined,
         error => reject(error)
       );
     });
@@ -416,88 +423,8 @@ export class CanvasComponent implements OnInit, AfterViewInit, OnDestroy, OnChan
     this.renderer.render(this.scene, this.camera);
   }
 
-  private distanceToInitial(which: PistonId): number {
-    if (which === 'grande') {
-      const init = this.pistaoGrande.haste.userData['initialPosition'] as THREE.Vector3;
-      return this.pistaoGrande.haste.position.distanceTo(init);
-    } else {
-      const init = this.pistaoPequeno.haste.userData['initialPosition'] as THREE.Vector3;
-      return this.pistaoPequeno.haste.position.distanceTo(init);
-    }
-  }
-
-  private hastesAtInitialPositionFor(which: PistonId): boolean {
-    return this.distanceToInitial(which) <= this.epsilon;
-  }
-
-  private hastesAtInitialPositionBoth(): boolean {
-    return this.hastesAtInitialPositionFor('grande') && this.hastesAtInitialPositionFor('pequeno');
-  }
-
   private updatePistonAnimations(deltaTime: number): void {
     if (!this.pistaoGrande || !this.pistaoPequeno) return;
-
-    const grandePendingPause = this.modelService.hasPendingPause('grande');
-    const pequenoPendingPause = this.modelService.hasPendingPause('pequeno');
-    const grandePendingResume = this.modelService.hasPendingResume('grande');
-    const pequenoPendingResume = this.modelService.hasPendingResume('pequeno');
-
-    if (!this.running) {
-    } else {
-      if (grandePendingPause) {
-        this.animationParams.grande.isAnimating = true;
-        this.animationParams.pequeno.isAnimating = true;
-
-        if (this.hastesAtInitialPositionFor('grande')) {
-          this.animationParams.grande.isAnimating = false;
-          this.modelService.notifyPaused('grande');
-
-          if (this.hastesAtInitialPositionFor('pequeno')) {
-            this.animationParams.pequeno.isAnimating = false;
-            this.modelService.notifyPaused('pequeno');
-          }
-        }
-      } else if (pequenoPendingPause) {
-        this.animationParams.grande.isAnimating = true;
-        this.animationParams.pequeno.isAnimating = true;
-
-        if (this.hastesAtInitialPositionFor('pequeno')) {
-          this.animationParams.pequeno.isAnimating = false;
-          this.modelService.notifyPaused('pequeno');
-
-          if (this.hastesAtInitialPositionFor('grande')) {
-            this.animationParams.grande.isAnimating = false;
-            this.modelService.notifyPaused('grande');
-          }
-        }
-      }
-
-      if (grandePendingResume) {
-        if (!this.animationParams.grande.isAnimating) {
-          this.animationParams.grande.isAnimating = true;
-          this.modelService.notifyResumed('grande');
-        }
-
-        if (this.hastesAtInitialPositionFor('grande')) {
-          if (!this.animationParams.pequeno.isAnimating) {
-            this.animationParams.pequeno.isAnimating = true;
-            this.modelService.notifyResumed('pequeno');
-          }
-        }
-      } else if (pequenoPendingResume) {
-        if (!this.animationParams.pequeno.isAnimating) {
-          this.animationParams.pequeno.isAnimating = true;
-          this.modelService.notifyResumed('pequeno');
-        }
-
-        if (this.hastesAtInitialPositionFor('pequeno')) {
-          if (!this.animationParams.grande.isAnimating) {
-            this.animationParams.grande.isAnimating = true;
-            this.modelService.notifyResumed('grande');
-          }
-        }
-      }
-    }
 
     if (this.running && this.animationParams.grande.isAnimating) {
       this.animationParams.grande.time += deltaTime * this.BASE_ANIMATION_SPEED;

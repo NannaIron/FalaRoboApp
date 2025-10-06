@@ -24,6 +24,37 @@ export class SensorService {
     return this.http.post(`${this.commonUrl}/sensors`, payload);
   }
 
+  postOppositeSensors(currentState: any): Observable<any> {
+    if (!currentState.positions || !currentState.sensors) {
+      return new Observable();
+    }
+
+    const oppositePositions = {
+      small: currentState.positions.small === 'Forwards' ? 'Backwards' : 'Forwards',
+      big: currentState.positions.big === 'Forwards' ? 'Backwards' : 'Forwards'
+    };
+
+    const oppositeSensors = {
+      small: {
+        '1S1': !currentState.sensors['1S1'],
+        '1S2': !currentState.sensors['1S2']
+      },
+      big: {
+        '2S1': !currentState.sensors['2S1'],
+        '2S2': !currentState.sensors['2S2']
+      }
+    };
+
+    const oppositePayload = {
+      small: oppositeSensors.small,
+      big: oppositeSensors.big,
+      positions: oppositePositions
+    };
+
+    console.log('Enviando sensores opostos:', oppositePayload);
+    return this.http.post(`${this.commonUrl}/sensors`, oppositePayload);
+  }
+
   postStart(running: boolean): Observable<any> {
     return this.http.post(`${this.commonUrl}/control/start`, { running });
   }
@@ -38,7 +69,10 @@ export class SensorService {
 
   fetchOnce(): Observable<any> {
     return this.http.get(`${this.commonUrl}/state`).pipe(
-      tap((data) => this.stateSubject.next(data))
+      tap((data) => {
+        console.log('Estado recebido:', data);
+        this.stateSubject.next(data);
+      })
     );
   }
 
